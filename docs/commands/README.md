@@ -2,44 +2,38 @@
 
 [← Documentation hub](../README.md)
 
-The CLI exposes help at three levels. Run `--help` at each tier, or use the captured blocks below.
+The CLI exposes help at three levels. Run `--help` at each tier, or see the excerpts below.
 
 | Level | Invocation | Document |
 | --- | --- | --- |
 | 1 — Global | `nac-analytics --help` | This page |
-| 2 — Product | `nac-analytics nexus-dashboard --help` | [README § Nexus Dashboard](../README.md#nexus-dashboard-commands) |
+| 2 — Product | `nac-analytics nexus-dashboard --help` | [README § Nexus Dashboard](../../README.md#nexus-dashboard-commands) |
 | 3 — Verb | `nac-analytics nexus-dashboard <verb> --help` | [Nexus Dashboard commands](nexus-dashboard/README.md) |
 
 ## Global help
 
-Product groups and the global `version` command.
-
-<!-- BEGIN: help:root -->
-
-```ansi
-[1m                                                                                                    [0m
-[1m [0m[1;33mUsage: [0m[1mnac-analytics [OPTIONS] COMMAND [ARGS]...[0m[1m                                                  [0m[1m [0m
-[1m                                                                                                    [0m
- Change analytics for Cisco products.                                                               
-                                                                                                    
- [2mRun a product group followed by a command, for example:[0m                                            
-                                                                                                    
- [2m  nac-analytics nexus-dashboard doctor      (alias: nd)[0m                                            
-                                                                                                    
- [2mEach product carries its own commands and configuration; see[0m                                       
- [2m`nac-analytics [0m[1;2;33m<product>[0m[2m [0m[1;2;36m-[0m[1;2;36m-help[0m[2m`. Products available today are listed below;[0m                       
- [2mmore Cisco products are planned.[0m                                                                   
-                                                                                                    
-[2m╭─[0m[2m Options [0m[2m───────────────────────────────────────────────────────────────────────────────────────[0m[2m─╮[0m
-[2m│[0m [1;36m-[0m[1;36m-help[0m          Show this message and exit.                                                      [2m│[0m
-[2m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯[0m
-[2m╭─[0m[2m Commands [0m[2m──────────────────────────────────────────────────────────────────────────────────────[0m[2m─╮[0m
-[2m│[0m [1;36mversion        [0m[1;36m [0m Print the version and exit.                                                     [2m│[0m
-[2m│[0m [1;36mnexus-dashboard[0m[1;36m [0m Change analysis for Cisco Nexus Dashboard 4.2.1+ (GA REST APIs, ACI).           [2m│[0m
-[2m╰──────────────────────────────────────────────────────────────────────────────────────────────────╯[0m
 ```
+$ nac-analytics --help
 
-<!-- END: help:root -->
+Usage: nac-analytics [OPTIONS] COMMAND [ARGS]...
+
+Change analytics for Cisco products.
+
+Run a product group followed by a command, for example:
+
+  nac-analytics nexus-dashboard doctor      (alias: nd)
+
+Each product carries its own commands and configuration; see
+`nac-analytics <product> --help`. Products available today are listed below;
+more Cisco products are planned.
+
+Options:
+  --help          Show this message and exit.
+
+Commands:
+  version          Print the version and exit.
+  nexus-dashboard  Change analysis for Cisco Nexus Dashboard 4.2.1+ (GA REST APIs, ACI).
+```
 
 ## Nexus Dashboard verbs
 

@@ -8,7 +8,7 @@ Reference material for **nac-analytics** — change analytics for Cisco products
 | --- | --- |
 | [Command reference](commands/README.md) | Three-tier CLI help: global, product, and per-verb |
 | [Configuration](configuration.md) | YAML layout, environment variables, precedence |
-| [Development](development.md) | Tests, lint, and regenerating captured help |
+| [Development](development.md) | Tests, lint, and contributor workflow |
 | [Examples](../examples/README.md) | Sample configs, Terraform pipeline, CI scripts |
 
 ## CLI shape

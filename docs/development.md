@@ -19,14 +19,6 @@ uv run mypy nac_analytics
 uv run pytest
 ```
 
-## Captured CLI help
+## CLI help in documentation
 
-Colourised `--help` output is checked into markdown via [scripts/capture-help.py](../scripts/capture-help.py). After changing Typer help strings:
-
-```bash
-uv run python scripts/capture-help.py
-```
-
-CI runs `uv run python scripts/capture-help.py --check` to fail on drift.
-
-**Destinations:** product-tier help → [README.md](../README.md); global help → [commands/README.md](commands/README.md); verb help → [commands/nexus-dashboard/](commands/nexus-dashboard/).
+After changing Typer help strings, update the plain-text `--help` excerpts in [README.md](../README.md) and [docs/commands/README.md](commands/README.md) if the user-facing surface changed. Verb pages link to `--help` rather than embedding full flag lists.
