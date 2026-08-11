@@ -40,7 +40,7 @@ uv run nac-analytics nd doctor
 
 ## Nexus Dashboard commands
 
-```
+```bash
 $ nac-analytics nexus-dashboard --help
 
 Usage: nac-analytics nexus-dashboard [OPTIONS] COMMAND [ARGS]...

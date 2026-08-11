@@ -12,7 +12,7 @@ The CLI exposes help at three levels. Run `--help` at each tier, or see the exce
 
 ## Global help
 
-```
+```bash
 $ nac-analytics --help
 
 Usage: nac-analytics [OPTIONS] COMMAND [ARGS]...

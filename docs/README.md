@@ -13,7 +13,7 @@ Reference material for **nac-analytics** — change analytics for Cisco products
 
 ## CLI shape
 
-```
+```bash
 nac-analytics <product> <verb> [options]
 nac-analytics version
 ```
