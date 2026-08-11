@@ -6,14 +6,18 @@ from pathlib import Path
 
 import pytest
 
-from nac_nd.cli import _emit_gate_result, _emit_snapshot, _resolve_pre_post
-from nac_nd.config import host_scheme
-from nac_nd.report import (
+from nac_analytics.core.config import host_scheme
+from nac_analytics.core.report import (
     DEFAULT_FAIL_ON,
     GATE_REPORT_FILES,
     Result,
     build_verdict,
     render,
+)
+from nac_analytics.products.nexus_dashboard.cli import (
+    _emit_gate_result,
+    _emit_snapshot,
+    _resolve_pre_post,
 )
 
 

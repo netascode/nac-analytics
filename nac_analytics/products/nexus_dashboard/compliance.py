@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from nac_nd.client import NDClient
-from nac_nd.report import Result
+from nac_analytics.core.report import Result
+from nac_analytics.products.nexus_dashboard.client import NDClient
 
 
 def snapshot_details(label: str, snapshot: dict[str, object]) -> dict[str, object]:

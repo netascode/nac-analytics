@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from nac_nd.client import NDClient
-from nac_nd.exceptions import InputError
+from nac_analytics.core.exceptions import InputError
+from nac_analytics.products.nexus_dashboard.client import NDClient
 
 DEFAULT_DELTA_DETAIL = "resources"
 PRECHANGE_DEFAULT_DETAIL = "full"

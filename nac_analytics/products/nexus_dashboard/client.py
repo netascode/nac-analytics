@@ -17,9 +17,9 @@ from typing import Any
 
 import httpx
 
-from nac_nd.config import Config
-from nac_nd.exceptions import ApiError, AuthError, InputError, JobError
-from nac_nd.log import is_verbose
+from nac_analytics.core.config import Config
+from nac_analytics.core.exceptions import ApiError, AuthError, InputError, JobError
+from nac_analytics.core.log import is_verbose
 
 logger = logging.getLogger(__name__)
 

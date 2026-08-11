@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from nac_nd.log import configure_logging
+from nac_analytics.core.log import configure_logging
 
 
 def test_httpx_is_quiet_by_default() -> None:

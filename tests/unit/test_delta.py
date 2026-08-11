@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from nac_nd.client import select_job
-from nac_nd.exceptions import JobError
+from nac_analytics.core.exceptions import JobError
+from nac_analytics.products.nexus_dashboard.client import select_job
 from tests.conftest import Lab, json_response
 
 SUMMARY_PATH = "/api/v1/analyze/jobs/summary"

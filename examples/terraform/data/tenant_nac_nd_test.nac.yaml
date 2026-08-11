@@ -1,6 +1,0 @@
----
-apic:
-  tenants:
-    - name: NAC_ND_TEST
-      vrfs:
-        - name: NAC_ND_TEST

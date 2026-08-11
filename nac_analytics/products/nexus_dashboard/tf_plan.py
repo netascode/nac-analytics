@@ -11,9 +11,11 @@ import json
 import re
 from typing import Any
 
-from nac_nd.apic import ApicObject
-from nac_nd.exceptions import InputError
-from nac_nd.rn_mappings import RN_PREFIX_CLASSNAME_MAPPINGS
+from nac_analytics.core.exceptions import InputError
+from nac_analytics.products.nexus_dashboard.apic import ApicObject
+from nac_analytics.products.nexus_dashboard.rn_mappings import (
+    RN_PREFIX_CLASSNAME_MAPPINGS,
+)
 
 _ACTIONS = frozenset({"create", "update", "delete"})
 

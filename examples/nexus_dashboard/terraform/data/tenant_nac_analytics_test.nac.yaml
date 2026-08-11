@@ -1,0 +1,7 @@
+# Lab tenant for Nexus Dashboard prechange/delta examples (examples/nexus_dashboard/terraform/).
+---
+apic:
+  tenants:
+    - name: NAC_ANALYTICS_TEST
+      vrfs:
+        - name: NAC_ANALYTICS_TEST

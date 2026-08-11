@@ -9,9 +9,7 @@ from xml.etree import ElementTree as ET  # nosec B405 — emit JUnit XML only, n
 
 import yaml
 
-from nac_nd.delta import DEFAULT_DELTA_DETAIL, PRECHANGE_DEFAULT_DETAIL
-from nac_nd.delta_format import render_delta_detail_text
-from nac_nd.exceptions import InputError
+from nac_analytics.core.exceptions import InputError
 
 # The severity vocabulary `/deltaAnalysis/summary` reports, worst first.
 SEVERITIES: tuple[str, ...] = (
@@ -139,6 +137,11 @@ class Result:
     details: dict[str, Any] = field(default_factory=dict)
     anomaly_summary: dict[str, Any] = field(default_factory=dict)
     delta_detail: dict[str, Any] = field(default_factory=dict)
+    # Pre-rendered text lines for the detail section. Produced by the product
+    # layer (which owns the detail vocabulary) so core rendering stays
+    # product-agnostic; ``delta_detail`` above still carries the structured
+    # form for json/yaml.
+    detail_lines: list[str] = field(default_factory=list)
     detail_level: str = ""
     compliance: dict[str, Any] = field(default_factory=dict)
     verdict: Verdict | None = None
@@ -252,10 +255,10 @@ def _render_multi_markdown(result: MultiFabricResult) -> str:
 
 
 def _render_multi_junit(result: MultiFabricResult) -> str:
-    suites = ET.Element("testsuites", name="nac-nd")
+    suites = ET.Element("testsuites", name="nac-analytics")
     for item in result.fabrics:
         violated = int(item.compliance.get("violated_rules", 0) or 0)
-        classname = f"nac-nd.{item.command}.{item.fabric}"
+        classname = f"nac-analytics.{item.command}.{item.fabric}"
         suite = ET.SubElement(
             suites,
             "testsuite",
@@ -369,14 +372,8 @@ def _render_change_approval_text(result: Result) -> str:
             else:
                 lines.append("  violating rules: (none)")
 
-    if result.delta_detail:
-        lines.extend(
-            render_delta_detail_text(
-                result.delta_detail,
-                detail_level=result.detail_level or PRECHANGE_DEFAULT_DETAIL,
-                anomaly_summary=result.anomaly_summary or None,
-            )
-        )
+    if result.detail_lines:
+        lines.extend(result.detail_lines)
 
     if result.warnings:
         lines.extend(["", "Warnings", ""])
@@ -403,14 +400,8 @@ def _render_text(result: Result) -> str:
         status = "PASS" if result.verdict.passed else "FAIL"
         lines.append("")
         lines.append(f"{status}: {result.verdict.reason}")
-    if result.delta_detail:
-        lines.extend(
-            render_delta_detail_text(
-                result.delta_detail,
-                detail_level=result.detail_level or DEFAULT_DELTA_DETAIL,
-                anomaly_summary=result.anomaly_summary or None,
-            )
-        )
+    if result.detail_lines:
+        lines.extend(result.detail_lines)
     if result.compliance:
         lines.append("")
         lines.append("Compliance:")
@@ -426,7 +417,7 @@ def _render_text(result: Result) -> str:
 
 
 def _render_markdown(result: Result) -> str:
-    lines = [f"# nac-nd {result.command}", ""]
+    lines = [f"# nac-analytics {result.command}", ""]
     lines.append("| field | value |")
     lines.append("| --- | --- |")
     lines += [f"| {key} | {value} |" for key, value in _rows(result)]
@@ -455,7 +446,7 @@ def _render_junit(result: Result) -> str:
     severity broke the build. Built with ElementTree so API-supplied text
     cannot produce malformed XML.
     """
-    classname = f"nac-nd.{result.command}.{result.fabric or 'unknown'}"
+    classname = f"nac-analytics.{result.command}.{result.fabric or 'unknown'}"
     cases: list[tuple[str, str]] = []
     verdict = result.verdict
     if verdict is not None:
@@ -471,7 +462,7 @@ def _render_junit(result: Result) -> str:
         cases.append((result.command, ""))
 
     failures = sum(1 for _, failure in cases if failure)
-    suites = ET.Element("testsuites", name="nac-nd")
+    suites = ET.Element("testsuites", name="nac-analytics")
     suite = ET.SubElement(
         suites,
         "testsuite",

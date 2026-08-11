@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from nac_nd.client import (
+from nac_analytics.core.exceptions import InputError, JobError
+from nac_analytics.products.nexus_dashboard.client import (
     SNAPSHOT_RECORD_CAP,
     finished_snapshots,
     resolve_snapshot_ids,
     select_snapshot,
     sort_snapshots,
 )
-from nac_nd.exceptions import InputError, JobError
 from tests.conftest import Lab, json_response
 
 

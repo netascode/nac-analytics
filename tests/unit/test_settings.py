@@ -7,13 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from nac_nd.exceptions import InputError
-from nac_nd.settings import (
+from nac_analytics.core.exceptions import InputError
+from nac_analytics.products.nexus_dashboard.settings import (
     apply_settings,
     bootstrap_settings,
     configured_fabrics,
     load_settings,
     resolve_config_path,
+    select_product_section,
 )
 
 
@@ -30,7 +31,7 @@ def test_yaml_values_apply_to_unset_environment_variables(
 ) -> None:
     os.environ.pop("ND_HOST", None)
 
-    apply_settings({"host": "yaml.example.com"}, path=Path("nac-nd.yaml"))
+    apply_settings({"host": "yaml.example.com"}, path=Path("nac-analytics.yaml"))
 
     assert os.environ["ND_HOST"] == "yaml.example.com"
 
@@ -38,7 +39,7 @@ def test_yaml_values_apply_to_unset_environment_variables(
 def test_a_real_environment_variable_beats_yaml(restore_environ: None) -> None:
     os.environ["ND_HOST"] = "real.example.com"
 
-    apply_settings({"host": "yaml.example.com"}, path=Path("nac-nd.yaml"))
+    apply_settings({"host": "yaml.example.com"}, path=Path("nac-analytics.yaml"))
 
     assert os.environ["ND_HOST"] == "real.example.com"
 
@@ -46,15 +47,17 @@ def test_a_real_environment_variable_beats_yaml(restore_environ: None) -> None:
 def test_fabrics_default_from_fabric_when_the_list_is_omitted(
     restore_environ: None,
 ) -> None:
-    apply_settings({"fabric": "FABRIC-A"}, path=Path("nac-nd.yaml"))
+    apply_settings({"fabric": "FABRIC-A"}, path=Path("nac-analytics.yaml"))
 
     assert configured_fabrics() == ["FABRIC-A"]
 
 
-def test_bootstrap_loads_nac_nd_yaml_from_the_working_directory(
+def test_bootstrap_loads_nac_analytics_yaml_from_the_working_directory(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, restore_environ: None
 ) -> None:
-    (tmp_path / "nac-nd.yaml").write_text("host: cwd.example.com\n")
+    (tmp_path / "nac-analytics.yaml").write_text(
+        "nexus_dashboard:\n  host: cwd.example.com\n"
+    )
     monkeypatch.chdir(tmp_path)
     os.environ.pop("ND_HOST", None)
 
@@ -68,13 +71,35 @@ def test_bootstrap_strips_a_root_level_config_option(
     restore_environ: None,
 ) -> None:
     config = tmp_path / "lab.yaml"
-    config.write_text("host: from-flag.example.com\n")
+    config.write_text("nexus_dashboard:\n  host: from-flag.example.com\n")
     os.environ.pop("ND_HOST", None)
 
     remaining = bootstrap_settings(["--config", str(config), "doctor"])
 
     assert remaining == ["doctor"]
     assert os.environ["ND_HOST"] == "from-flag.example.com"
+
+
+def test_select_product_section_returns_the_nested_scope() -> None:
+    data = {"nexus_dashboard": {"host": "nd.example.com"}}
+
+    assert select_product_section(data) == {"host": "nd.example.com"}
+
+
+def test_flat_unscoped_config_is_rejected() -> None:
+    with pytest.raises(InputError, match="nexus_dashboard:"):
+        select_product_section({"host": "nd.example.com"})
+
+
+def test_bootstrap_rejects_flat_unscoped_config(
+    tmp_path: Path, restore_environ: None
+) -> None:
+    config = tmp_path / "flat.yaml"
+    config.write_text("host: from-flag.example.com\n")
+    os.environ.pop("ND_HOST", None)
+
+    with pytest.raises(InputError, match="nexus_dashboard:"):
+        bootstrap_settings(["--config", str(config), "doctor"])
 
 
 def test_unknown_yaml_keys_are_ignored_without_failing(

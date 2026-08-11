@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from nac_nd.exceptions import InputError
+from nac_analytics.core.exceptions import InputError
 
 # The login endpoint rejects a missing or empty `domain` with HTTP 500, so
 # there is always a value here.
@@ -70,11 +70,3 @@ class Config:
     @property
     def base_url(self) -> str:
         return f"{self.scheme}://{self.host}"
-
-    @property
-    def prechange_ui_url(self) -> str:
-        """Nexus Dashboard Pre-Change Analysis page (same as nexus-pcv --output-url)."""
-        return (
-            f"{self.base_url}/appcenter/cisco/nexus-insights/ui/"
-            "#/changeManagement/preChangeAnalysis"
-        )

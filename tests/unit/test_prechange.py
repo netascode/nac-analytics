@@ -6,9 +6,9 @@ import json
 
 import pytest
 
-from nac_nd.client import prechange_delta_job_id
-from nac_nd.exceptions import ApiError, InputError, JobError
-from nac_nd.report import DEFAULT_FAIL_ON, build_verdict
+from nac_analytics.core.exceptions import ApiError, InputError, JobError
+from nac_analytics.core.report import DEFAULT_FAIL_ON, build_verdict
+from nac_analytics.products.nexus_dashboard.client import prechange_delta_job_id
 from tests.conftest import Lab, json_response
 
 JOB_PATH = "/api/v1/analyze/jobs/prechangeAnalysis/abc123"

@@ -35,7 +35,7 @@ jobs:
       # [tool.bandit]. The toml extra supplies the pyproject config reader.
       - name: Run bandit security scan
         run: >
-          uvx --from "bandit[toml]" bandit -c pyproject.toml -r nac_nd/ -ll
+          uvx --from "bandit[toml]" bandit -c pyproject.toml -r nac_analytics/ -ll
           -f json -o bandit-security-report.json
 
       - name: Upload security report
@@ -67,8 +67,11 @@ jobs:
       - name: Ruff format
         run: uv run ruff format --check --diff .
 
+      - name: Captured CLI help
+        run: uv run python scripts/capture-help.py --check
+
       - name: Mypy
-        run: uv run mypy nac_nd
+        run: uv run mypy nac_analytics
 
   test:
     name: Tests

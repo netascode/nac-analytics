@@ -6,8 +6,8 @@ import logging
 
 import pytest
 
-from nac_nd.config import Config
-from nac_nd.redaction import REDACTED, install_redaction_filter, redact
+from nac_analytics.core.config import Config
+from nac_analytics.core.redaction import REDACTED, install_redaction_filter, redact
 
 JWT = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiJ9.c2lnbmF0dXJl"
 
@@ -47,7 +47,7 @@ def test_newlines_are_escaped_not_dropped() -> None:
 
 
 def test_the_filter_masks_message_arguments(caplog: pytest.LogCaptureFixture) -> None:
-    logger = logging.getLogger("nac_nd.test")
+    logger = logging.getLogger("nac_analytics.test")
     install_redaction_filter(logger)
 
     with caplog.at_level(logging.INFO):
@@ -59,7 +59,7 @@ def test_the_filter_masks_message_arguments(caplog: pytest.LogCaptureFixture) ->
 def test_the_filter_masks_a_config_rendered_into_a_log_line(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    logger = logging.getLogger("nac_nd.test_config")
+    logger = logging.getLogger("nac_analytics.test_config")
     install_redaction_filter(logger)
     config = Config(host="nd", username="u", password="s3cr3t")
 
@@ -70,7 +70,7 @@ def test_the_filter_masks_a_config_rendered_into_a_log_line(
 
 
 def test_installing_twice_does_not_stack_filters() -> None:
-    logger = logging.getLogger("nac_nd.test_idempotent")
+    logger = logging.getLogger("nac_analytics.test_idempotent")
 
     first = install_redaction_filter(logger)
     second = install_redaction_filter(logger)

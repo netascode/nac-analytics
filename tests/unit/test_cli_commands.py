@@ -13,9 +13,9 @@ import httpx
 import pytest
 from typer.testing import CliRunner
 
-from nac_nd.cli import app
-from nac_nd.client import NDClient as RealNDClient
-from nac_nd.exceptions import AnomalyThresholdError
+from nac_analytics.cli import app
+from nac_analytics.core.exceptions import AnomalyThresholdError
+from nac_analytics.products.nexus_dashboard.client import NDClient as RealNDClient
 from tests.conftest import Lab, json_response
 
 runner = CliRunner()
@@ -144,7 +144,9 @@ def use_lab(monkeypatch: pytest.MonkeyPatch) -> object:
             http = httpx.Client(transport=httpx.MockTransport(lab))
             return RealNDClient(config, http=http)  # type: ignore[arg-type]
 
-        monkeypatch.setattr("nac_nd.cli.NDClient", factory)
+        monkeypatch.setattr(
+            "nac_analytics.products.nexus_dashboard.cli.NDClient", factory
+        )
 
     return install
 
@@ -155,7 +157,7 @@ def test_doctor_reports_connectivity(
     monkeypatch.chdir(tmp_path)
     use_lab(build_lab())
 
-    result = runner.invoke(app, ["doctor", "--output", "json"], env=ENV)
+    result = runner.invoke(app, ["nd", "doctor", "--output", "json"], env=ENV)
 
     assert result.exit_code == 0, result.output
     assert "authenticated_as" in result.output
@@ -167,7 +169,7 @@ def test_snapshots_prints_id_only(
     monkeypatch.chdir(tmp_path)
     use_lab(build_lab())
 
-    result = runner.invoke(app, ["snapshots", "latest"], env=ENV)
+    result = runner.invoke(app, ["nd", "snapshots", "latest"], env=ENV)
 
     assert result.exit_code == 0, result.output
     # stderr progress notes are merged into output; the ID is the last line.
@@ -180,7 +182,7 @@ def test_delta_writes_report_and_passes(
     monkeypatch.chdir(tmp_path)
     use_lab(build_lab())
 
-    result = runner.invoke(app, ["delta"], env=ENV)
+    result = runner.invoke(app, ["nd", "delta"], env=ENV)
 
     assert result.exit_code == 0, result.output
     assert (tmp_path / "delta-report.xml").is_file()
@@ -193,7 +195,7 @@ def test_delta_fails_on_new_critical(
     monkeypatch.chdir(tmp_path)
     use_lab(build_lab(new_critical=2))
 
-    result = runner.invoke(app, ["delta"], env=ENV)
+    result = runner.invoke(app, ["nd", "delta"], env=ENV)
 
     assert result.exit_code == AnomalyThresholdError.exit_code
     assert "DECISION: FAIL" in result.output
@@ -205,7 +207,7 @@ def test_prechange_via_job_id_writes_report(
     monkeypatch.chdir(tmp_path)
     use_lab(build_lab())
 
-    result = runner.invoke(app, ["prechange", "--job-id", "pc-1"], env=ENV)
+    result = runner.invoke(app, ["nd", "prechange", "--job-id", "pc-1"], env=ENV)
 
     assert result.exit_code == 0, result.output
     report = tmp_path / "prechange-report.xml"
@@ -221,7 +223,7 @@ def test_prechange_uploads_a_plan(
     plan = tmp_path / "plan.json"
     plan.write_text('{"imdata": [{"fvTenant": {"attributes": {"name": "X"}}}]}')
 
-    result = runner.invoke(app, ["prechange", str(plan)], env=ENV)
+    result = runner.invoke(app, ["nd", "prechange", str(plan)], env=ENV)
 
     assert result.exit_code == 0, result.output
     assert (tmp_path / "prechange-report.xml").is_file()
@@ -233,7 +235,7 @@ def test_compliance_single_fabric(
     monkeypatch.chdir(tmp_path)
     use_lab(build_lab())
 
-    result = runner.invoke(app, ["compliance", "--output", "json"], env=ENV)
+    result = runner.invoke(app, ["nd", "compliance", "--output", "json"], env=ENV)
 
     assert result.exit_code == 0, result.output
     assert "violated_rules" in result.output
@@ -245,6 +247,6 @@ def test_compliance_fails_on_violations(
     monkeypatch.chdir(tmp_path)
     use_lab(build_lab(violated=1))
 
-    result = runner.invoke(app, ["compliance", "--fail-on-violations"], env=ENV)
+    result = runner.invoke(app, ["nd", "compliance", "--fail-on-violations"], env=ENV)
 
     assert result.exit_code == AnomalyThresholdError.exit_code

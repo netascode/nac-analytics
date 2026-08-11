@@ -1,53 +1,30 @@
-"""Command line interface (entry layer).
+"""Nexus Dashboard command group (entry layer).
 
-Typer commands that orchestrate config, client calls, domain modules, and reporting.
+Typer commands that orchestrate config, client calls, domain modules, and
+reporting for `nac-analytics nexus-dashboard <verb>`.
 """
 
 from __future__ import annotations
 
 import logging
-import os
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated, Any, Optional
 
 import typer
-from dotenv import find_dotenv, load_dotenv
 from typer._click.core import ParameterSource
 
-from nac_nd import __version__
-from nac_nd.client import (
-    NDClient,
-    fabric_name,
-    is_aci_fabric,
-    prechange_delta_job_id,
-    resolve_snapshot_ids,
-)
-from nac_nd.compliance import (
-    compliance_for_snapshot,
-    prechange_job_details,
-    run_compliance_check,
-    snapshot_details,
-)
-from nac_nd.config import DEFAULT_DOMAIN, Config, normalise_host
-from nac_nd.delta import (
-    DEFAULT_DELTA_DETAIL,
-    DELTA_DETAIL_LEVELS,
-    PRECHANGE_DEFAULT_DETAIL,
-    normalize_delta_detail,
-)
-from nac_nd.exceptions import (
+from nac_analytics.core.config import DEFAULT_DOMAIN, Config, normalise_host
+from nac_analytics.core.exceptions import (
     AnomalyThresholdError,
     ApiError,
     AuthError,
     InputError,
     NacNdError,
 )
-from nac_nd.log import configure_logging
-from nac_nd.pipeline import finish_delta_analysis
-from nac_nd.progress import note
-from nac_nd.report import (
+from nac_analytics.core.log import configure_logging
+from nac_analytics.core.progress import note
+from nac_analytics.core.report import (
     DEFAULT_FAIL_ON,
     GATE_DEFAULT_OUTPUT,
     GATE_REPORT_FILES,
@@ -59,15 +36,35 @@ from nac_nd.report import (
     render_multi,
     serialize_structured,
 )
-from nac_nd.settings import bootstrap_settings, configured_fabrics
-from nac_nd.tf_plan import prepare_prechange_content
+from nac_analytics.products.nexus_dashboard.client import (
+    NDClient,
+    fabric_name,
+    is_aci_fabric,
+    prechange_delta_job_id,
+    resolve_snapshot_ids,
+)
+from nac_analytics.products.nexus_dashboard.compliance import (
+    compliance_for_snapshot,
+    prechange_job_details,
+    run_compliance_check,
+    snapshot_details,
+)
+from nac_analytics.products.nexus_dashboard.delta import (
+    DEFAULT_DELTA_DETAIL,
+    DELTA_DETAIL_LEVELS,
+    PRECHANGE_DEFAULT_DETAIL,
+    normalize_delta_detail,
+)
+from nac_analytics.products.nexus_dashboard.pipeline import finish_delta_analysis
+from nac_analytics.products.nexus_dashboard.settings import configured_fabrics
+from nac_analytics.products.nexus_dashboard.tf_plan import prepare_prechange_content
 
 logger = logging.getLogger(__name__)
 
 # Precomputed so the option default is a plain value, not a function call.
 FAIL_ON_DEFAULT = ",".join(DEFAULT_FAIL_ON)
 
-APP_HELP = """\
+ND_HELP = """\
 Change analysis for Cisco Nexus Dashboard 4.2.1+ (GA REST APIs, ACI).
 
 Configuration:
@@ -83,13 +80,23 @@ Configuration:
   ND_DELTA_DETAIL         Default --detail for prechange and delta
   ND_CONFIG               Path to YAML config file
 
-  Settings load from CLI flags, then environment variables, nac-nd.yaml, or .env."""
+  In YAML, nest these under a `nexus_dashboard:` section. Settings load from
+  CLI flags, then environment variables, nac-analytics.yaml, or .env."""
 
 app = typer.Typer(
-    help=APP_HELP,
+    help=ND_HELP,
     add_completion=False,
     no_args_is_help=True,
 )
+
+
+def _prechange_ui_url(base_url: str) -> str:
+    """Nexus Dashboard Pre-Change Analysis page (same as nexus-pcv --output-url)."""
+    return (
+        f"{base_url}/appcenter/cisco/nexus-insights/ui/"
+        "#/changeManagement/preChangeAnalysis"
+    )
+
 
 # -- shared options --------------------------------------------------------
 
@@ -252,12 +259,6 @@ GateOutputOpt = Annotated[
 # -- plumbing --------------------------------------------------------------
 
 
-def _apply_legacy_env_aliases() -> None:
-    """Map retired env var names so older `.env` files still work."""
-    if "ND_VERIFY_SSL" not in os.environ and "ND_VERIFY_TLS" in os.environ:
-        os.environ["ND_VERIFY_SSL"] = os.environ["ND_VERIFY_TLS"]
-
-
 def _configure_logging(verbose: bool) -> None:
     configure_logging(verbose)
 
@@ -311,7 +312,7 @@ def _build_config(
 
 def _auto_name(prefix: str) -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    return f"nac-nd-{prefix}-{stamp}"
+    return f"nac-analytics-{prefix}-{stamp}"
 
 
 def _prechange_result_from_job(
@@ -356,7 +357,7 @@ def _prechange_result_from_job(
         scope="baseline snapshot (before change)",
     )
     details: dict[str, object] = {
-        "prechange_ui_url": config.prechange_ui_url,
+        "prechange_ui_url": _prechange_ui_url(config.base_url),
         "job_id": job_id,
         "delta_job_id": delta_job_id,
         **snapshot_details("base", snapshot),
@@ -691,7 +692,7 @@ def delta(
 ) -> None:
     """Compare two snapshots of a fabric and report what changed.
 
-    Usage: nac-nd delta [pre] [post] — defaults to latest-1 vs latest.
+    Usage: nac-analytics delta [pre] [post] — defaults to latest-1 vs latest.
     By default writes JUnit to delta-report.xml and exits 3 on critical/major.
     """
     _configure_logging(verbose)
@@ -1037,23 +1038,3 @@ def doctor(
         )
     except Exception as exc:
         raise _fail(exc, verbose) from exc
-
-
-@app.command()
-def version() -> None:
-    """Print the version and exit."""
-    typer.echo(f"nac-nd {__version__}")
-
-
-def main() -> None:
-    try:
-        remaining = bootstrap_settings()
-    except InputError as exc:
-        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
-        raise SystemExit(InputError.exit_code) from exc
-    sys.argv = [sys.argv[0], *remaining]
-    # `.env` is read after YAML so a real environment variable or CLI flag still
-    # wins. Values already in `os.environ` are left untouched.
-    load_dotenv(find_dotenv(usecwd=True))
-    _apply_legacy_env_aliases()
-    app()

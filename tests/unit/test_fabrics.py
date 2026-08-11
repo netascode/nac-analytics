@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from nac_nd.client import fabric_name, is_aci_fabric
-from nac_nd.exceptions import InputError
+from nac_analytics.core.exceptions import InputError
+from nac_analytics.products.nexus_dashboard.client import fabric_name, is_aci_fabric
 from tests.conftest import Lab, json_response
 
 # Shaped as /api/v1/manage/fabrics responds: the identifier is `name`, `meta`

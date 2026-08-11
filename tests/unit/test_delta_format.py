@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from nac_nd.delta_format import render_delta_detail_text
+from nac_analytics.products.nexus_dashboard.delta_format import render_delta_detail_text
 
 
 def test_nested_resources_render_as_columns() -> None:

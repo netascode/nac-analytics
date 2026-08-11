@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import sys
 
-from nac_nd.redaction import install_redaction_filter
+from nac_analytics.core.redaction import install_redaction_filter
 
 _verbose = False
 

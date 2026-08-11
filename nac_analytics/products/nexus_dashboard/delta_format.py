@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from nac_nd.delta import normalize_delta_detail, summary_new_count
+from nac_analytics.products.nexus_dashboard.delta import (
+    normalize_delta_detail,
+    summary_new_count,
+)
 
 _POLICY_DIFF_CAP = 20
 _ANOMALY_ROW_CAP = 50

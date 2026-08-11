@@ -11,6 +11,6 @@ variable "aci_password" {
 }
 
 variable "aci_url" {
-  description = "ACI APIC URL (https://...)"
+  description = "ACI APIC URL (https://...) — often the same host as Nexus Dashboard"
   type        = string
 }

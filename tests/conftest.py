@@ -9,9 +9,9 @@ from typing import Any
 import httpx
 import pytest
 
-from nac_nd.client import NDClient
-from nac_nd.config import Config
-from nac_nd.log import configure_logging
+from nac_analytics.core.config import Config
+from nac_analytics.core.log import configure_logging
+from nac_analytics.products.nexus_dashboard.client import NDClient
 
 Handler = Callable[[httpx.Request], httpx.Response]
 Route = httpx.Response | list[httpx.Response] | Handler
@@ -96,4 +96,7 @@ def quiet_logging() -> None:
 @pytest.fixture(autouse=True)
 def no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
     """Stop polling loops waiting during unit tests."""
-    monkeypatch.setattr("nac_nd.client.time.sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        "nac_analytics.products.nexus_dashboard.client.time.sleep",
+        lambda _seconds: None,
+    )

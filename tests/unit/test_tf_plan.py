@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from nac_nd.exceptions import InputError
-from nac_nd.tf_plan import (
+from nac_analytics.core.exceptions import InputError
+from nac_analytics.products.nexus_dashboard.tf_plan import (
     is_terraform_plan,
     prepare_prechange_content,
     terraform_plan_to_payload,

@@ -1,34 +1,44 @@
-# nac-nd YAML configuration (safe to commit).
+# nac-analytics YAML configuration (safe to commit).
 #
-# Copy to `nac-nd.yaml` or `~/.config/nac-nd/config.yaml`, or pass
+# Copy to `nac-analytics.yaml` or `~/.config/nac-analytics/config.yaml`, or pass
 # `--config /path/to/this/file`.
+#
+# Settings are scoped per Cisco product. Nest a product's settings under its
+# section (`nexus_dashboard:` today; more products later). Each product reads
+# only its own section.
 #
 # Keep secrets out of this file — use `.env` or the environment for
 # ND_USER and ND_PASSWORD (see `.env.example`).
+#
+# ---------------------------------------------------------------------------
+# Supported variables — nexus_dashboard section
+# ---------------------------------------------------------------------------
+#   Key                  Env var                 Description
+#   host                 ND_HOST                 Hostname or IP (HTTPS assumed when no scheme given).
+#   domain               ND_DOMAIN               Login domain (DefaultAuth, local, or your LDAP domain).
+#   verify_ssl           ND_VERIFY_SSL           Verify TLS cert (ND_VERIFY_TLS also accepted).
+#   ca_bundle            ND_CA_BUNDLE            Path to a CA bundle for private/self-signed certs.
+#   fabric               ND_FABRIC               Default fabric when a command needs one and --fabric is omitted.
+#   fabrics              —                       Fabrics `compliance --all` checks (defaults to [fabric]).
+#   job_timeout_minutes  ND_JOB_TIMEOUT_MINUTES  Minutes to wait for a pre-change analysis job.
+#   poll_interval        ND_POLL_INTERVAL        Seconds between job status polls.
+#   delta_detail         ND_DELTA_DETAIL         Default detail: none, resources, anomalies, policy-diff, full
+#                                                (prechange defaults to `full`; delta to `resources`).
+#
+#   Credentials (secrets — set via environment, not here):
+#   username             ND_USER                 Login username.
+#   password             ND_PASSWORD             Login password.
+# ---------------------------------------------------------------------------
 
-# Nexus Dashboard hostname or IP (HTTPS is assumed when no scheme is given).
-host: nd.example.com
-
-# Login domain (DefaultAuth, local, or your LDAP domain name).
-domain: DefaultAuth
-
-# TLS verification. Set false only on trusted lab clusters with self-signed certs.
-verify_ssl: true
-# ca_bundle: /path/to/nd-cluster-ca.pem
-
-# Default fabric when a command needs one and --fabric is omitted.
-fabric: FABRIC-A
-
-# Every fabric `compliance --all` checks (defaults to [fabric] when omitted).
-fabrics:
-  - FABRIC-A
-  - FABRIC-B
-
-# Pre-change analysis can sit in ND's queue before running; raise on slow clusters.
-job_timeout_minutes: 30
-poll_interval: 15
-
-# Default for `delta --detail` and YAML override for both gate commands.
-# prechange defaults to `full` when unset; delta defaults to `resources`.
-# Values: none, resources, anomalies, policy-diff, full
-delta_detail: resources
+nexus_dashboard:
+  host: nd.example.com
+  domain: DefaultAuth
+  verify_ssl: true
+  # ca_bundle: /path/to/nd-cluster-ca.pem
+  fabric: FABRIC-A
+  fabrics:
+    - FABRIC-A
+    - FABRIC-B
+  job_timeout_minutes: 30
+  poll_interval: 15
+  delta_detail: resources

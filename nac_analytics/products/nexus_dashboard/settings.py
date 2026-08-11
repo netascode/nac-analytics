@@ -10,13 +10,18 @@ from typing import Any
 
 import yaml
 
-from nac_nd.exceptions import InputError
+from nac_analytics.core.cli_args import strip_config_option
+from nac_analytics.core.exceptions import InputError
 
 logger = logging.getLogger(__name__)
 
-CONFIG_OPTION = "--config"
-DEFAULT_CONFIG_NAME = "nac-nd.yaml"
-XDG_CONFIG_RELATIVE = Path(".config") / "nac-nd" / "config.yaml"
+# The YAML section that scopes settings to this product. Settings must be
+# nested under a `nexus_dashboard:` mapping so a single config file can carry
+# multiple products.
+PRODUCT_SECTION = "nexus_dashboard"
+
+DEFAULT_CONFIG_NAME = "nac-analytics.yaml"
+XDG_CONFIG_RELATIVE = Path(".config") / "nac-analytics" / "config.yaml"
 
 KNOWN_KEYS = frozenset(
     {
@@ -67,26 +72,6 @@ def loaded_config_path() -> Path | None:
     return _loaded_config_path
 
 
-def strip_config_option(argv: list[str]) -> tuple[Path | None, list[str]]:
-    """Remove a root-level ``--config`` option from ``argv`` before Typer runs."""
-    remaining: list[str] = []
-    config_path: Path | None = None
-    index = 0
-    while index < len(argv):
-        arg = argv[index]
-        if arg == CONFIG_OPTION and index + 1 < len(argv):
-            config_path = Path(argv[index + 1])
-            index += 2
-            continue
-        if arg.startswith(f"{CONFIG_OPTION}="):
-            config_path = Path(arg.split("=", 1)[1])
-            index += 1
-            continue
-        remaining.append(arg)
-        index += 1
-    return config_path, remaining
-
-
 def resolve_config_path(
     *, explicit: Path | None = None, cwd: Path | None = None
 ) -> Path | None:
@@ -124,6 +109,38 @@ def _normalise_fabrics(raw: Any) -> list[str]:
     if not fabrics:
         raise InputError("Config key 'fabrics' must not be empty.")
     return fabrics
+
+
+def select_product_section(
+    data: dict[str, Any], *, path: Path | None = None
+) -> dict[str, Any]:
+    """Return this product's settings from a loaded YAML mapping.
+
+    Settings must be nested under the ``nexus_dashboard:`` section. An
+    unscoped (flat) top-level mapping is rejected so config is unambiguous
+    when multiple products share a file.
+    """
+    location = f" in {path}" if path is not None else ""
+    if PRODUCT_SECTION not in data:
+        raise InputError(
+            f"Config{location} must nest Nexus Dashboard settings under a "
+            f"'{PRODUCT_SECTION}:' section. Unscoped (flat) config is not "
+            f"supported; wrap your settings under '{PRODUCT_SECTION}:'."
+        )
+    section = data[PRODUCT_SECTION]
+    if section is None:
+        return {}
+    if not isinstance(section, dict):
+        raise InputError(
+            f"Config section '{PRODUCT_SECTION}:'{location} must be a mapping."
+        )
+    return section
+
+
+def apply_legacy_env_aliases() -> None:
+    """Map retired env var names so older ``.env`` files still work."""
+    if "ND_VERIFY_SSL" not in os.environ and "ND_VERIFY_TLS" in os.environ:
+        os.environ["ND_VERIFY_SSL"] = os.environ["ND_VERIFY_TLS"]
 
 
 def load_settings(path: Path) -> dict[str, Any]:
@@ -181,5 +198,7 @@ def bootstrap_settings(argv: list[str] | None = None) -> list[str]:
     if path is not None:
         if not path.is_file():
             raise InputError(f"Config file {path} does not exist.")
-        apply_settings(load_settings(path), path=path)
+        apply_settings(
+            select_product_section(load_settings(path), path=path), path=path
+        )
     return remaining

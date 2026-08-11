@@ -7,9 +7,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from nac_nd.client import NDClient
-from nac_nd.delta import collect_delta_detail_warnings, fetch_delta_details
-from nac_nd.report import Result, build_verdict
+from nac_analytics.core.report import Result, build_verdict
+from nac_analytics.products.nexus_dashboard.client import NDClient
+from nac_analytics.products.nexus_dashboard.delta import (
+    collect_delta_detail_warnings,
+    fetch_delta_details,
+)
+from nac_analytics.products.nexus_dashboard.delta_format import render_delta_detail_text
 
 
 def finish_delta_analysis(
@@ -41,6 +45,11 @@ def finish_delta_analysis(
         details=details,
         anomaly_summary=summary,
         delta_detail=delta_detail,
+        detail_lines=render_delta_detail_text(
+            delta_detail,
+            detail_level=detail_level,
+            anomaly_summary=summary or None,
+        ),
         detail_level=detail_level,
         compliance=compliance or {},
         verdict=build_verdict(summary, thresholds),

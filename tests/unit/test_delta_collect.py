@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import pytest
 
-from nac_nd.delta import (
+from nac_analytics.core.exceptions import InputError
+from nac_analytics.products.nexus_dashboard.delta import (
     collect_delta_detail_warnings,
     fetch_delta_details,
     normalize_delta_detail,
     parse_delta_detail,
     summary_new_count,
 )
-from nac_nd.exceptions import InputError
 
 
 def test_parse_delta_detail_accepts_full_and_none() -> None:

@@ -28,6 +28,7 @@ junit.xml
 .env
 .env.*
 !.env.example
+nac-analytics.yaml
 nac-nd.yaml
 
 # Local analysis artefacts (may contain TF variables / credentials)

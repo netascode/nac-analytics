@@ -5,7 +5,7 @@
         "attributes": {
           "dn": "uni/tn-EXAMPLE",
           "name": "EXAMPLE",
-          "descr": "Minimal sample for nac-nd prechange"
+          "descr": "Minimal sample for nac-analytics nd prechange"
         }
       }
     }

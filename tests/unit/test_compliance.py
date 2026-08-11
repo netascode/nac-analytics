@@ -4,9 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from nac_nd.client import check_compliance_timestamp, compliance_timestamp_drift
-from nac_nd.compliance import compliance_for_snapshot, prechange_job_details
-from nac_nd.exceptions import ApiError
+from nac_analytics.core.exceptions import ApiError
+from nac_analytics.products.nexus_dashboard.client import (
+    check_compliance_timestamp,
+    compliance_timestamp_drift,
+)
+from nac_analytics.products.nexus_dashboard.compliance import (
+    compliance_for_snapshot,
+    prechange_job_details,
+)
 from tests.conftest import Lab, json_response
 
 SUMMARY_PATH = "/api/v1/analyze/complianceReport/summary"

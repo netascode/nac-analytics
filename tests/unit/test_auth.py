@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from nac_nd.client import token_from_auth_response
-from nac_nd.exceptions import AuthError
+from nac_analytics.core.exceptions import AuthError
+from nac_analytics.products.nexus_dashboard.client import token_from_auth_response
 from tests.conftest import Lab, json_response
 
 

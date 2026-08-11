@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from nac_nd.config import Config, normalise_host
-from nac_nd.exceptions import InputError
+from nac_analytics.core.config import Config, normalise_host
+from nac_analytics.core.exceptions import InputError
 
 
 @pytest.mark.parametrize(
@@ -35,15 +35,6 @@ def test_an_http_host_prefix_uses_http_for_api_calls() -> None:
 
     assert config.scheme == "http"
     assert config.base_url == "http://nd.example.com"
-
-
-def test_prechange_ui_url_points_at_the_nd_prechange_page() -> None:
-    config = Config(host="nd.example.com", username="u", password="p")
-
-    assert config.prechange_ui_url == (
-        "https://nd.example.com/appcenter/cisco/nexus-insights/ui/"
-        "#/changeManagement/preChangeAnalysis"
-    )
 
 
 @pytest.mark.parametrize(

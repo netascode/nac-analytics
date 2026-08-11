@@ -8,8 +8,8 @@ from xml.etree import ElementTree as ET
 import pytest
 import yaml
 
-from nac_nd.exceptions import InputError
-from nac_nd.report import (
+from nac_analytics.core.exceptions import InputError
+from nac_analytics.core.report import (
     DEFAULT_FAIL_ON,
     OUTPUT_FORMATS,
     MultiFabricResult,
@@ -163,16 +163,14 @@ def compliance_result(fabric: str, *, violated: int) -> Result:
     )
 
 
-def test_text_output_includes_delta_detail_compliance_and_warnings() -> None:
+def test_text_output_includes_detail_lines_compliance_and_warnings() -> None:
     text = render(
         result(
-            delta_detail={
-                "resources": {
-                    "endpoint": "/deltaAnalysis/resources",
-                    "error": "HTTP 503",
-                }
-            },
-            detail_level="resources",
+            detail_lines=[
+                "",
+                "=== Resources (/deltaAnalysis/resources) ===",
+                "error: HTTP 503",
+            ],
             compliance={"violated_rules": 2, "violating_rules": []},
             warnings=["delta job survived cleanup"],
         ),
