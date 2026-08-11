@@ -7,7 +7,7 @@ The CLI exposes help at three levels. Run `--help` at each tier, or see the exce
 | Level | Invocation | Document |
 | --- | --- | --- |
 | 1 — Global | `nac-analytics --help` | This page |
-| 2 — Product | `nac-analytics nexus-dashboard --help` | [README § Nexus Dashboard](../../README.md#nexus-dashboard-commands) |
+| 2 — Product | `nac-analytics nexus-dashboard --help` | [Nexus Dashboard](../nexus-dashboard.md) |
 | 3 — Verb | `nac-analytics nexus-dashboard <verb> --help` | [Nexus Dashboard commands](nexus-dashboard/README.md) |
 
 ## Global help

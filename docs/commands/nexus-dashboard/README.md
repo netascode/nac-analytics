@@ -4,7 +4,7 @@
 
 Change analysis for Cisco Nexus Dashboard 4.2.1+ (GA REST APIs, ACI). Invoke as `nac-analytics nexus-dashboard <verb>` or `nac-analytics nd <verb>`.
 
-Product-level help (configuration variables and verb list) is in the main [README](../../../README.md#nexus-dashboard-commands).
+Product-level help (configuration variables and verb list) is in [Nexus Dashboard](../nexus-dashboard.md).
 
 ## Verbs
 

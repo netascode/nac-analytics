@@ -21,4 +21,4 @@ uv run pytest
 
 ## CLI help in documentation
 
-After changing Typer help strings, update the plain-text `--help` excerpts in [README.md](../README.md) and [docs/commands/README.md](commands/README.md) if the user-facing surface changed. Verb pages link to `--help` rather than embedding full flag lists.
+After changing Typer help strings, update the plain-text `--help` excerpts in [nexus-dashboard.md](nexus-dashboard.md) and [commands/README.md](commands/README.md) if the user-facing surface changed. Verb pages link to `--help` rather than embedding full flag lists.
