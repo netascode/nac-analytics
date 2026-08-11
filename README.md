@@ -20,9 +20,7 @@ Today the product is `nexus-dashboard` (alias `nd`); more products are planned.
 | Examples & CI | [examples/README.md](examples/README.md) |
 | Development | [docs/development.md](docs/development.md) |
 
-## Example output
-
-Text output from `-output text` (gate commands default to JUnit for CI).
+## Nexus Dashboard Examples - delta & compliance
 
 **delta** — compare snapshots after a change:
 
@@ -50,7 +48,7 @@ resourceType           new       removed       earlier         later
   major        ENDPOINT_DUPLICATE_IP            web-epg              duplicate ip detected
 ```
 
-**compliance** — rule status for the latest snapshot:
+**compliance** — rule status for the latest snapshot (by default, latest snapshot is used):
 
 ```bash
 $ nac-analytics nd compliance -output text
