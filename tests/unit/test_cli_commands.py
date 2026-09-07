@@ -33,6 +33,7 @@ SNAPSHOTS_PATH = "/api/v1/analyze/fabricSnapshots"
 LOGIN_DOMAINS_PATH = "/api/v1/infra/logindomains"
 PRECHANGE_CREATE_PATH = "/api/v1/analyze/jobs/prechangeAnalysis/file"
 PRECHANGE_JOB_PATH = "/api/v1/analyze/jobs/prechangeAnalysis/pc-1"
+PRECHANGE_LIST_PATH = "/api/v1/analyze/jobs/prechangeAnalysis"
 DELTA_CREATE_PATH = "/api/v1/analyze/jobs/deltaAnalysis"
 JOBS_SUMMARY_PATH = "/api/v1/analyze/jobs/summary"
 DELTA_SUMMARY_PATH = "/api/v1/analyze/deltaAnalysis/summary"
@@ -105,6 +106,7 @@ def build_lab(*, new_critical: int = 0, violated: int = 0) -> Lab:
                 {"defaultDomain": "DefaultAuth", "domains": [{"name": "DefaultAuth"}]}
             ),
             PRECHANGE_CREATE_PATH: json_response({"data": {"jobId": "pc-1"}}),
+            PRECHANGE_LIST_PATH: json_response({"entries": []}),
             PRECHANGE_JOB_PATH: json_response(prechange_job),
             DELTA_CREATE_PATH: json_response({"jobId": "delta-1"}),
             JOBS_SUMMARY_PATH: json_response(

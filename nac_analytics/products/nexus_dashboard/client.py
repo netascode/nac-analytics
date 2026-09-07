@@ -865,10 +865,35 @@ class NDClient:
         self._raise_for_status(resp, "GET", path)
         return as_dict(resp.json())
 
+    def list_prechange_analyses(self) -> list[dict[str, Any]]:
+        """Fetch all pre-change analysis jobs.
+
+        The Nexus Dashboard backend requires this listing call to advance
+        queued jobs — it acts as a trigger/heartbeat that the GUI page load
+        makes automatically.  Polling only the single-job endpoint leaves
+        jobs stuck indefinitely in 'submitted' state.
+        """
+        path = f"{ANALYZE}/jobs/prechangeAnalysis"
+        resp = self.request(
+            "GET",
+            path,
+            params={"sort": "-analysisSubmissionTime", "offset": 0, "max": 10},
+        )
+        self._raise_for_status(resp, "GET", path)
+        body = as_dict(resp.json())
+        return as_list(body.get("entries") or body.get("data"))
+
     def wait_prechange_analysis(self, job_id: str) -> dict[str, Any]:
         """Poll a pre-change analysis until it reaches a terminal state."""
         deadline = time.monotonic() + self.config.job_timeout_minutes * 60
         while True:
+            # The list endpoint must be called on every poll cycle — it acts as
+            # a trigger that the backend requires to advance job state.  Without
+            # it the job stays stuck at its current status ('submitted' or
+            # 'running') indefinitely.  This mirrors exactly what the GUI's
+            # pre-change list page does on each load.  The result is discarded;
+            # the single-job GET is used for the actual status check.
+            self.list_prechange_analyses()
             job = self.get_prechange_analysis(job_id)
             status = str(job.get("analysisStatus", "")).lower()
             if status == PRECHANGE_COMPLETED:

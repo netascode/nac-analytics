@@ -12,9 +12,13 @@ from nac_analytics.products.nexus_dashboard.client import prechange_delta_job_id
 from tests.conftest import Lab, json_response
 
 JOB_PATH = "/api/v1/analyze/jobs/prechangeAnalysis/abc123"
+LIST_PATH = "/api/v1/analyze/jobs/prechangeAnalysis"
 CREATE_PATH = "/api/v1/analyze/jobs/prechangeAnalysis/file"
 REMOVE_PATH = "/api/v1/analyze/jobs/deltaAnalysis/actions/remove"
 JOBS_SUMMARY_PATH = "/api/v1/analyze/jobs/summary"
+
+# A minimal list-endpoint response used as a trigger in polling tests.
+LIST_RESPONSE = json_response({"entries": []})
 
 BASE_SNAPSHOT = {
     "snapshotId": "snap-1",
@@ -195,11 +199,12 @@ def test_other_create_failures_stay_generic(make_client) -> None:
 def test_polling_follows_the_lower_case_status_vocabulary(make_client) -> None:
     lab = Lab(
         {
+            LIST_PATH: LIST_RESPONSE,
             JOB_PATH: [
                 json_response(job("submitted")),
                 json_response(job("running")),
                 json_response(job("completed", spanshotDeltaJobId="d1")),
-            ]
+            ],
         }
     )
     client = make_client(lab)
@@ -212,7 +217,9 @@ def test_polling_follows_the_lower_case_status_vocabulary(make_client) -> None:
 
 def test_a_stopped_analysis_is_a_failure(make_client) -> None:
     """A stopped analysis examined nothing, so it fails rather than passes."""
-    client = make_client(Lab({JOB_PATH: json_response(job("stopped"))}))
+    client = make_client(
+        Lab({LIST_PATH: LIST_RESPONSE, JOB_PATH: json_response(job("stopped"))})
+    )
 
     with pytest.raises(JobError) as caught:
         client.wait_prechange_analysis("abc123")
@@ -223,7 +230,12 @@ def test_a_stopped_analysis_is_a_failure(make_client) -> None:
 
 def test_a_failed_analysis_surfaces_its_error_message(make_client) -> None:
     client = make_client(
-        Lab({JOB_PATH: json_response(job("failed", errorMessage="parse error"))})
+        Lab(
+            {
+                LIST_PATH: LIST_RESPONSE,
+                JOB_PATH: json_response(job("failed", errorMessage="parse error")),
+            }
+        )
     )
 
     with pytest.raises(JobError, match="parse error"):
@@ -232,7 +244,7 @@ def test_a_failed_analysis_surfaces_its_error_message(make_client) -> None:
 
 def test_a_saved_draft_is_not_waited_on(make_client) -> None:
     """`saved` is a draft that never progresses, so it is not polled."""
-    lab = Lab({JOB_PATH: json_response(job("saved"))})
+    lab = Lab({LIST_PATH: LIST_RESPONSE, JOB_PATH: json_response(job("saved"))})
     client = make_client(lab)
 
     with pytest.raises(JobError, match="saved draft"):
@@ -243,7 +255,12 @@ def test_a_saved_draft_is_not_waited_on(make_client) -> None:
 
 def test_a_vanished_job_fails_immediately(make_client) -> None:
     """A job that no longer exists fails without further polling."""
-    lab = Lab({JOB_PATH: json_response({"message": "job abc123 not found"}, 400)})
+    lab = Lab(
+        {
+            LIST_PATH: LIST_RESPONSE,
+            JOB_PATH: json_response({"message": "job abc123 not found"}, 400),
+        }
+    )
     client = make_client(lab)
 
     with pytest.raises(JobError, match="no longer exists"):
