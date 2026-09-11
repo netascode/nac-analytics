@@ -1,4 +1,4 @@
-"""Connection settings, sourced from CLI options with `.env` behind them."""
+"""Nexus Dashboard connection settings."""
 
 from __future__ import annotations
 

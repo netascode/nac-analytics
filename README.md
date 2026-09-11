@@ -1,21 +1,11 @@
 # nac-analytics
 
-> Today it covers Cisco ACI via Nexus Dashboard 4.2.1+; the intent is to grow beyond Nexus Dashboard and add support for additional Cisco products, so one tool can drive change analytics across platforms.
+> Today this tool covers Cisco ACI via Nexus Dashboard 4.2.1+; the intent is to grow beyond Nexus Dashboard and add support for additional Cisco products, so one tool can drive change analytics across platforms.
 
 CLI for change analysis on Cisco ACI fabrics via Nexus Dashboard 4.2.1+.
 
 Commands are grouped per Cisco product: `nac-analytics <product> <command>`.
 
-## Documentation
-
-| Topic | Link |
-| --- | --- |
-| Documentation hub | [docs/README.md](https://github.com/netascode/nac-analytics/blob/main/docs/README.md) |
-| Nexus Dashboard | [docs/nexus-dashboard.md](https://github.com/netascode/nac-analytics/blob/main/docs/nexus-dashboard.md) |
-| Command reference | [docs/commands/README.md](https://github.com/netascode/nac-analytics/blob/main/docs/commands/README.md) |
-| Exit codes | [docs/exit-codes.md](https://github.com/netascode/nac-analytics/blob/main/docs/exit-codes.md) |
-| Configuration | [docs/configuration.md](https://github.com/netascode/nac-analytics/blob/main/docs/configuration.md) |
-| Examples (optional lab scripts) | [examples/README.md](https://github.com/netascode/nac-analytics/blob/main/examples/README.md) |
 
 ## Example output
 
@@ -85,9 +75,21 @@ nac-analytics --help
 ## Quick start
 
 ```bash
-cp config.example.yaml nac-analytics.yaml   # edit host, fabric, domain
-cp .env.example .env                 # set ND_USER and ND_PASSWORD
+nac-analytics init
+# edit nac-analytics.yaml and .env
 nac-analytics nd doctor
 ```
 
-The config files above are sufficient for normal use. See [examples](https://github.com/netascode/nac-analytics/blob/main/examples/README.md) only if you want an optional lab walkthrough with Terraform.
+After `pip install`, `init` writes `./nac-analytics.yaml` and `./.env` from bundled templates. Git clone users can copy from [examples/nexus_dashboard/config/](https://github.com/netascode/nac-analytics/tree/main/examples/nexus_dashboard/config) instead. See [examples](https://github.com/netascode/nac-analytics/blob/main/examples/README.md) only for optional lab scripts (Terraform, CI walkthrough).
+
+
+## Documentation
+
+| Topic | Link |
+| --- | --- |
+| Documentation hub | [docs/README.md](https://github.com/netascode/nac-analytics/blob/main/docs/README.md) |
+| Nexus Dashboard | [docs/nexus-dashboard.md](https://github.com/netascode/nac-analytics/blob/main/docs/nexus-dashboard.md) |
+| Command reference | [docs/commands/README.md](https://github.com/netascode/nac-analytics/blob/main/docs/commands/README.md) |
+| Exit codes | [docs/exit-codes.md](https://github.com/netascode/nac-analytics/blob/main/docs/exit-codes.md) |
+| Configuration | [docs/configuration.md](https://github.com/netascode/nac-analytics/blob/main/docs/configuration.md) |
+| Examples (optional lab scripts) | [examples/README.md](https://github.com/netascode/nac-analytics/blob/main/examples/README.md) |

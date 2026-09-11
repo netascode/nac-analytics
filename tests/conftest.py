@@ -9,9 +9,9 @@ from typing import Any
 import httpx
 import pytest
 
-from nac_analytics.core.config import Config
 from nac_analytics.core.log import configure_logging
 from nac_analytics.products.nexus_dashboard.client import NDClient
+from nac_analytics.products.nexus_dashboard.config import Config
 
 Handler = Callable[[httpx.Request], httpx.Response]
 Route = httpx.Response | list[httpx.Response] | Handler
@@ -86,6 +86,23 @@ def make_client(config: Config) -> Iterator[Callable[..., NDClient]]:
     yield factory
     for http in opened:
         http.close()
+
+
+@pytest.fixture
+def use_lab(monkeypatch: pytest.MonkeyPatch) -> object:
+    """Patch the CLI client factory so every request routes through a Lab."""
+
+    def install(lab: Lab) -> None:
+        def factory(config: object, **_: object) -> NDClient:
+            http = httpx.Client(transport=httpx.MockTransport(lab))
+            return NDClient(config, http=http)  # type: ignore[arg-type]
+
+        monkeypatch.setattr(
+            "nac_analytics.products.nexus_dashboard.commands._helpers.NDClient",
+            factory,
+        )
+
+    return install
 
 
 @pytest.fixture(autouse=True)

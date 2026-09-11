@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from nac_analytics.core.config import Config, normalise_host
 from nac_analytics.core.exceptions import InputError
+from nac_analytics.products.nexus_dashboard.config import Config, normalise_host
 
 
 @pytest.mark.parametrize(

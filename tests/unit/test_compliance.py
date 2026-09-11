@@ -14,9 +14,10 @@ from nac_analytics.products.nexus_dashboard.compliance import (
     prechange_job_details,
 )
 from tests.conftest import Lab, json_response
+from tests.fixtures.nd_paths import COMPLIANCE_RULES_PATH, COMPLIANCE_SUMMARY_PATH
 
-SUMMARY_PATH = "/api/v1/analyze/complianceReport/summary"
-RULES_PATH = "/api/v1/analyze/complianceReport/ruleDetails"
+SUMMARY_PATH = COMPLIANCE_SUMMARY_PATH
+RULES_PATH = COMPLIANCE_RULES_PATH
 
 # A snapshot collected at 10:38:56 whose assurance analysis landed at
 # 10:39:54. The compliance run lands with the analysis.

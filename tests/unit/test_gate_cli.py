@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from nac_analytics.core.config import host_scheme
 from nac_analytics.core.report import (
     DEFAULT_FAIL_ON,
     GATE_REPORT_FILES,
@@ -14,11 +13,12 @@ from nac_analytics.core.report import (
     build_verdict,
     render,
 )
-from nac_analytics.products.nexus_dashboard.cli import (
+from nac_analytics.products.nexus_dashboard.commands._helpers import (
     _emit_gate_result,
     _emit_snapshot,
     _resolve_pre_post,
 )
+from nac_analytics.products.nexus_dashboard.config import host_scheme
 
 
 def test_host_scheme_defaults_to_https() -> None:

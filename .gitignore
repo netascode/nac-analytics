@@ -28,7 +28,6 @@ junit.xml
 # Credentials and local configuration
 .env
 .env.*
-!.env.example
 nac-analytics.yaml
 
 # Local analysis artefacts (may contain TF variables / credentials)
@@ -50,3 +49,9 @@ spec/
 
 # macOS
 .DS_Store
+
+# Terraform local state (lab examples)
+**/.terraform/
+
+# Local review artefacts
+composer-report.md

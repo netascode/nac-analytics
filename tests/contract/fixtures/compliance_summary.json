@@ -1,0 +1,11 @@
+{
+  "collectionTimestamp": "2026-08-07T10:39:54Z",
+  "ruleCountByStatus": {
+    "enforcedCount": 5,
+    "violatedCount": 0
+  },
+  "ruleCountByType": {
+    "communication": 2,
+    "configuration": 3
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "jwttoken": "eyJhbGciOiJIUzI1NiJ9.test",
+  "token": "eyJhbGciOiJIUzI1NiJ9.test",
+  "statusCode": 200,
+  "username": "admin"
+}

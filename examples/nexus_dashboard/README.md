@@ -25,7 +25,7 @@ Verb reference: [docs/commands/nexus-dashboard/](../../docs/commands/nexus-dashb
 All paths require:
 
 - Nexus Dashboard 4.2.1+ with an ACI fabric registered
-- [`nac-analytics.yaml`](../../config.example.yaml) and [`.env`](../../.env.example) configured for your ND instance
+- [`nac-analytics.yaml`](config/config.example.yaml) and [`.env`](config/env.example) configured for your ND instance (copy from [`config/`](config/))
 
 The **full lab pipeline** additionally requires:
 
@@ -36,6 +36,7 @@ The **full lab pipeline** additionally requires:
 
 | File / script | Required? | Purpose |
 | --- | --- | --- |
+| [`config/`](config/) | **Required** (copy to cwd) | [`config.example.yaml`](config/config.example.yaml) and [`env.example`](config/env.example) — templates for `nac-analytics.yaml` and `.env` |
 | [`minimal-change.json`](minimal-change.json) | Optional | Static APIC MO JSON for `nd prechange` without generating a Terraform plan |
 | [`terraform/`](terraform/) | Optional | Minimal NAC tenant (`NAC_ANALYTICS_TEST`); run `terraform plan` to produce `plan.json` for prechange |
 | [`ci-pipeline.sh`](ci-pipeline.sh) | Optional | Interactive lab script: pin snapshot → prechange → you apply Terraform → delta |

@@ -13,4 +13,4 @@ The CLI uses specific exit codes so CI can distinguish error types.
 | 4 | Bad input, config, or configuration rejected by Nexus Dashboard |
 | 5 | Authentication or authorisation failure |
 
-Gate commands (`prechange`, `delta`) default to JUnit on stdout and write reports to `prechange-report.xml` / `delta-report.xml`. Use `-output text` for human-readable output like the examples in the [README](../README.md#example-output).
+Gate commands (`prechange`, `delta`) default to JUnit files (`prechange-report.xml` and `delta-report.xml`). A one-line verdict is printed on stderr (`DECISION: PASS` or `DECISION: FAIL`). Use `-output text` for human-readable output on stdout, as in the [README](../README.md#example-output).

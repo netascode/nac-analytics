@@ -8,7 +8,7 @@
 # only its own section.
 #
 # Keep secrets out of this file — use `.env` or the environment for
-# ND_USER and ND_PASSWORD (see `.env.example`).
+# ND_USER and ND_PASSWORD (see bundled env template or `nac-analytics init`).
 #
 # ---------------------------------------------------------------------------
 # Supported variables — nexus_dashboard section

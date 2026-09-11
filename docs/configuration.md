@@ -24,7 +24,7 @@ Resolved in order until one file exists:
 
 ## Nexus Dashboard variables
 
-The authoritative key list and inline comments live in [config.example.yaml](../config.example.yaml). Summary:
+The authoritative key list and inline comments live in [config.example.yaml](../examples/nexus_dashboard/config/config.example.yaml). Summary:
 
 | YAML key (under `nexus_dashboard:`) | Environment variable | Notes |
 | --- | --- | --- |
@@ -49,4 +49,4 @@ nexus_dashboard:
   fabric: FABRIC-A
 ```
 
-Keep credentials out of committed YAML — use `.env` or your CI secret store (see [.env.example](../.env.example)).
+Keep credentials out of committed YAML — use `.env` or your CI secret store (see [env.example](../examples/nexus_dashboard/config/env.example)).

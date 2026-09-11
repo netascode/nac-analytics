@@ -1,0 +1,12 @@
+{
+  "snapshots": [
+    {
+      "snapshotId": "snap-1",
+      "collectionTimestamp": "2026-08-07T10:00:00Z",
+      "analysisTimestamp": "2026-08-07T10:01:00Z",
+      "status": "finished",
+      "snapshotType": "online",
+      "fabricName": "FABRIC-A"
+    }
+  ]
+}

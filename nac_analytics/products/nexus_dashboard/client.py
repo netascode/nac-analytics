@@ -17,9 +17,9 @@ from typing import Any
 
 import httpx
 
-from nac_analytics.core.config import Config
 from nac_analytics.core.exceptions import ApiError, AuthError, InputError, JobError
 from nac_analytics.core.log import is_verbose
+from nac_analytics.products.nexus_dashboard.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -533,6 +533,10 @@ class NDClient:
 
     # -- HTTP --------------------------------------------------------------
 
+    def _poll_pause(self) -> None:
+        """Sleep between job status poll iterations."""
+        time.sleep(self.config.poll_interval_seconds)
+
     def request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         self._ensure_auth()
         url = f"{self.config.base_url}{path}"
@@ -673,7 +677,7 @@ class NDClient:
             )
         )
         if not snapshots:
-            raise JobError(
+            raise InputError(
                 f"Fabric '{fabric}' has no finished snapshots to analyse against."
             )
         return select_snapshot(snapshots, selector)
@@ -735,7 +739,7 @@ class NDClient:
                     "A full fabric collection can take considerably longer than "
                     "the default; raise --timeout."
                 )
-            time.sleep(self.config.poll_interval_seconds)
+            self._poll_pause()
 
     def _analysis_job_finished(self, job_id: str, window: AbsenceWindow) -> bool:
         """True once the analysis job has succeeded; raises if it failed.
@@ -924,7 +928,7 @@ class NDClient:
                     f"{self.config.job_timeout_minutes} minutes."
                 )
             logger.debug("Pre-change analysis %s is %s...", job_id, status or "pending")
-            time.sleep(self.config.poll_interval_seconds)
+            self._poll_pause()
 
     def delete_prechange_analysis(self, job_id: str) -> None:
         """Delete a pre-change analysis. Only legal once the job is terminal."""
@@ -1024,7 +1028,7 @@ class NDClient:
                     f"Delta analysis {job_id} did not finish within "
                     f"{self.config.job_timeout_minutes} minutes."
                 )
-            time.sleep(self.config.poll_interval_seconds)
+            self._poll_pause()
 
     def remove_delta_jobs(self, fabric: str, job_ids: list[str]) -> None:
         if not job_ids:
@@ -1126,7 +1130,7 @@ class NDClient:
         if job_id:
             self.delete_prechange_analysis(job_id)
         if children:
-            time.sleep(self.config.poll_interval_seconds)
+            self._poll_pause()
             leftover = self.find_prechange_delta_jobs(fabric, schedule_id)
             if leftover:
                 logger.warning(

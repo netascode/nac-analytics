@@ -31,11 +31,12 @@ jobs:
         with:
           enable-cache: true
 
-      # -c pyproject.toml is required: without it bandit silently ignores
-      # [tool.bandit]. The toml extra supplies the pyproject config reader.
+      - name: Install dependencies
+        run: uv sync --locked --extra dev
+
       - name: Run bandit security scan
         run: >
-          uvx --from "bandit[toml]" bandit -c pyproject.toml -r nac_analytics/ -ll
+          uv run bandit -c pyproject.toml -r nac_analytics/ -ll
           -f json -o bandit-security-report.json
 
       - name: Upload security report
@@ -113,7 +114,7 @@ jobs:
         run: >
           uv run pytest
           --cov --cov-report=term-missing --cov-report=xml
-          --cov-fail-under=75
+          --cov-fail-under=80
 
       - name: Upload coverage
         if: matrix.python == '3.13'

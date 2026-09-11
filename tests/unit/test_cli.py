@@ -20,19 +20,16 @@ import nac_analytics
 from nac_analytics.cli import app, main
 from nac_analytics.core.exceptions import AnomalyThresholdError, InputError, JobError
 from nac_analytics.core.report import DEFAULT_FAIL_ON, Result, build_verdict
-from nac_analytics.products.nexus_dashboard.cli import _enforce, _prechange_ui_url
+from nac_analytics.products.nexus_dashboard.commands._helpers import (
+    _enforce,
+    _prechange_ui_url,
+)
 from nac_analytics.products.nexus_dashboard.settings import apply_legacy_env_aliases
+from tests.fixtures.env import ND_TEST_ENV
 
 runner = CliRunner()
 
-# Enough configuration to reach the file checks. No request is made: the
-# input is rejected before any client is constructed.
-ENV = {
-    "ND_HOST": "nd.example.com",
-    "ND_USER": "admin",
-    "ND_PASSWORD": "s3cr3t",
-    "ND_FABRIC": "FABRIC-A",
-}
+ENV = ND_TEST_ENV
 
 
 def test_exit_codes_for_bad_input_and_failed_jobs_do_not_collide() -> None:
@@ -361,4 +358,37 @@ def test_a_real_command_with_flat_config_still_exits_4(
         main()
 
     assert caught.value.code == InputError.exit_code
-    assert "nexus_dashboard:" in capsys.readouterr().err
+    err = capsys.readouterr().err
+    assert "nexus_dashboard:" in err
+    assert f"error (exit {InputError.exit_code}):" in err
+
+
+def test_init_writes_config_and_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    result = runner.invoke(app, ["init"], env=ND_TEST_ENV)
+    assert result.exit_code == 0
+    assert (tmp_path / "nac-analytics.yaml").is_file()
+    assert (tmp_path / ".env").is_file()
+    assert "nexus_dashboard:" in (tmp_path / "nac-analytics.yaml").read_text()
+    assert "ND_USER=" in (tmp_path / ".env").read_text()
+
+
+def test_init_refuses_overwrite_without_force(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    first = runner.invoke(app, ["init"], env=ND_TEST_ENV)
+    second = runner.invoke(app, ["init"], env=ND_TEST_ENV)
+    assert first.exit_code == 0
+    assert second.exit_code == InputError.exit_code
+
+
+def test_init_force_overwrites(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    runner.invoke(app, ["init"], env=ND_TEST_ENV)
+    (tmp_path / "nac-analytics.yaml").write_text("placeholder\n")
+    result = runner.invoke(app, ["init", "--force"], env=ND_TEST_ENV)
+    assert result.exit_code == 0
+    assert "placeholder" not in (tmp_path / "nac-analytics.yaml").read_text()

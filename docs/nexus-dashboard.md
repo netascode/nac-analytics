@@ -43,6 +43,15 @@ Commands:
   doctor      Check connectivity, credentials, and fabric visibility.
 ```
 
+## Output defaults
+
+| Command kind | Default `--output` |
+| --- | --- |
+| Gate commands (`prechange`, `delta`) | `junit` → writes `prechange-report.xml` or `delta-report.xml` |
+| Other commands (`doctor`, `compliance`, `snapshots`, `analyze`) | `text` |
+
+Use `-output text` on gate commands for human-readable stdout. Quick-start examples use `nd`; reference tables use `nexus-dashboard`.
+
 ## Commands
 
 Verb summaries and per-command guides: [Nexus Dashboard commands](commands/nexus-dashboard/README.md).

@@ -24,13 +24,18 @@ from nac_analytics.products.nexus_dashboard.client import (
     snapshot_newer_than,
 )
 from tests.conftest import Lab, json_response
+from tests.fixtures.env import ND_TEST_ENV
+from tests.fixtures.nd_paths import (
+    ASSURANCE_TRIGGER_PATH,
+    FABRICS_PATH,
+    JOBS_SUMMARY_PATH,
+    SNAPSHOTS_PATH,
+)
 
 runner = CliRunner()
 
-TRIGGER_PATH = "/api/v1/analyze/jobs/assuranceAnalysis"
-SUMMARY_PATH = "/api/v1/analyze/jobs/summary"
-SNAPSHOTS_PATH = "/api/v1/analyze/fabricSnapshots"
-FABRICS_PATH = "/api/v1/manage/fabrics"
+TRIGGER_PATH = ASSURANCE_TRIGGER_PATH
+SUMMARY_PATH = JOBS_SUMMARY_PATH
 
 # The live prefix. The published spec's response example shortens it to
 # `ANALYSIS-ACI-`, which does not match what the cluster returns.
@@ -41,13 +46,7 @@ RECURRING_JOB_ID = "ONLINE-ANALYSIS-ACI-c9635808-5e21-11f1-9161-62c5f98b2c1d"
 
 BASELINE = "2026-08-14T07:29:57Z"
 
-ENV = {
-    "ND_HOST": "nd.example.com",
-    "ND_USER": "admin",
-    "ND_PASSWORD": "s3cr3t",
-    "ND_FABRIC": "FABRIC-A",
-    "ND_VERIFY_SSL": "false",
-}
+ENV = ND_TEST_ENV
 
 
 def snapshot(
@@ -316,7 +315,8 @@ def use_lab(monkeypatch: pytest.MonkeyPatch) -> object:
             return RealNDClient(config, http=http)  # type: ignore[arg-type]
 
         monkeypatch.setattr(
-            "nac_analytics.products.nexus_dashboard.cli.NDClient", factory
+            "nac_analytics.products.nexus_dashboard.commands._helpers.NDClient",
+            factory,
         )
 
     return install

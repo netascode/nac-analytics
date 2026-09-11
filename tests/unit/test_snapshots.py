@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from nac_analytics.core.exceptions import InputError, JobError
+from nac_analytics.core.exceptions import InputError
 from nac_analytics.products.nexus_dashboard.client import (
     SNAPSHOT_RECORD_CAP,
     finished_snapshots,
@@ -126,7 +126,7 @@ def test_a_fabric_with_no_finished_snapshots_is_a_job_error(make_client) -> None
     )
     client = make_client(lab)
 
-    with pytest.raises(JobError, match="no finished snapshots"):
+    with pytest.raises(InputError, match="no finished snapshots"):
         client.resolve_snapshot("FABRIC-A", "latest")
 
 

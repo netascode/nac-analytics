@@ -6,7 +6,11 @@ on:
       - "v*"
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,6 +32,8 @@ jobs:
           uv pip install --python .pkg-test dist/*.whl
           .pkg-test/bin/nac-analytics version
           .pkg-test/bin/nac-analytics --help
+          uv pip install --python .pkg-test pytest httpx pyyaml python-dotenv
+          .pkg-test/bin/python -m pytest tests/unit/test_cli.py tests/contract/ -q
 
       - name: Upload distributions
         uses: actions/upload-artifact@v7

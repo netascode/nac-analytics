@@ -9,6 +9,9 @@ routes pre-Typer configuration loading to the selected product.
 from __future__ import annotations
 
 import sys
+from importlib import resources
+from pathlib import Path
+from typing import Annotated
 
 import typer
 from dotenv import find_dotenv, load_dotenv
@@ -18,6 +21,9 @@ from nac_analytics.core.cli_args import strip_config_option
 from nac_analytics.core.exceptions import InputError
 from nac_analytics.core.product import Product
 from nac_analytics.products import REGISTRY, resolve_product
+
+DEFAULT_CONFIG_NAME = "nac-analytics.yaml"
+DEFAULT_ENV_NAME = ".env"
 
 ROOT_HELP = """\
 Change analytics for Cisco products.
@@ -48,6 +54,56 @@ for _product in REGISTRY:
 def version() -> None:
     """Print the version and exit."""
     typer.echo(f"nac-analytics {__version__}")
+
+
+def _write_scaffold_file(path: Path, content: str, *, force: bool) -> None:
+    if path.exists() and not force:
+        raise InputError(f"{path} already exists; use --force to overwrite.")
+    path.write_text(content, encoding="utf-8")
+
+
+@app.command()
+def init(
+    product: Annotated[
+        str,
+        typer.Option(
+            "--product",
+            "-p",
+            help="Product to scaffold configuration for (nd / nexus-dashboard).",
+        ),
+    ] = "nd",
+    force: Annotated[
+        bool,
+        typer.Option("--force", help="Overwrite existing nac-analytics.yaml and .env."),
+    ] = False,
+) -> None:
+    """Write nac-analytics.yaml and .env from bundled templates in the cwd."""
+    try:
+        if resolve_product(product) is None:
+            raise InputError(
+                f"Unknown product {product!r}. Choose from: "
+                + ", ".join(p.cli_name for p in REGISTRY)
+            )
+        template_pkg = resources.files(
+            "nac_analytics.products.nexus_dashboard.templates"
+        )
+        config_text = (template_pkg / "config.example.yaml").read_text(encoding="utf-8")
+        env_text = (template_pkg / "env.example").read_text(encoding="utf-8")
+        config_path = Path(DEFAULT_CONFIG_NAME)
+        env_path = Path(DEFAULT_ENV_NAME)
+        _write_scaffold_file(config_path, config_text, force=force)
+        _write_scaffold_file(env_path, env_text, force=force)
+        typer.echo(f"Wrote {config_path} and {env_path}")
+        typer.echo(
+            "Edit host, fabric, and credentials, then run: nac-analytics nd doctor"
+        )
+    except InputError as exc:
+        typer.secho(
+            f"error (exit {exc.exit_code}): {exc}",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=exc.exit_code) from exc
 
 
 def _active_product(args: list[str]) -> Product | None:
@@ -92,7 +148,11 @@ def main() -> None:
         else:
             _, remaining = strip_config_option(args)
     except InputError as exc:
-        typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
+        typer.secho(
+            f"error (exit {exc.exit_code}): {exc}",
+            fg=typer.colors.RED,
+            err=True,
+        )
         raise SystemExit(InputError.exit_code) from exc
     sys.argv = [sys.argv[0], *remaining]
     # `.env` is read after YAML so a real environment variable or CLI flag still

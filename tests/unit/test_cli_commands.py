@@ -7,6 +7,8 @@ pipeline and the compliance run path are all exercised without a network.
 
 from __future__ import annotations
 
+import os
+from collections.abc import Iterator
 from pathlib import Path
 
 import httpx
@@ -14,34 +16,48 @@ import pytest
 from typer.testing import CliRunner
 
 from nac_analytics.cli import app
-from nac_analytics.core.exceptions import AnomalyThresholdError
-from nac_analytics.products.nexus_dashboard.client import NDClient as RealNDClient
+from nac_analytics.core.exceptions import AnomalyThresholdError, InputError
+from nac_analytics.products.nexus_dashboard import settings as nd_settings
+from nac_analytics.products.nexus_dashboard.settings import (
+    apply_settings,
+    load_settings,
+    select_product_section,
+)
 from tests.conftest import Lab, json_response
+from tests.fixtures.env import ND_TEST_ENV
+from tests.fixtures.nd_paths import (
+    ANOMALY_DETAILS_PATH,
+    COMPLIANCE_RULES_PATH,
+    COMPLIANCE_SUMMARY_PATH,
+    DELTA_CREATE_PATH,
+    DELTA_POLICY_DIFF_PATH,
+    DELTA_RESOURCES_PATH,
+    DELTA_SUMMARY_PATH,
+    FABRICS_PATH,
+    JOBS_SUMMARY_PATH,
+    LOGIN_DOMAINS_PATH,
+    PRECHANGE_CREATE_PATH,
+    PRECHANGE_JOB_PATH,
+    PRECHANGE_LIST_PATH,
+    SNAPSHOTS_PATH,
+)
 
 runner = CliRunner()
 
-ENV = {
-    "ND_HOST": "nd.example.com",
-    "ND_USER": "admin",
-    "ND_PASSWORD": "s3cr3t",
-    "ND_FABRIC": "FABRIC-A",
-    "ND_VERIFY_SSL": "false",
-}
+ENV = ND_TEST_ENV
 
-FABRICS_PATH = "/api/v1/manage/fabrics"
-SNAPSHOTS_PATH = "/api/v1/analyze/fabricSnapshots"
-LOGIN_DOMAINS_PATH = "/api/v1/infra/logindomains"
-PRECHANGE_CREATE_PATH = "/api/v1/analyze/jobs/prechangeAnalysis/file"
-PRECHANGE_JOB_PATH = "/api/v1/analyze/jobs/prechangeAnalysis/pc-1"
-PRECHANGE_LIST_PATH = "/api/v1/analyze/jobs/prechangeAnalysis"
-DELTA_CREATE_PATH = "/api/v1/analyze/jobs/deltaAnalysis"
-JOBS_SUMMARY_PATH = "/api/v1/analyze/jobs/summary"
-DELTA_SUMMARY_PATH = "/api/v1/analyze/deltaAnalysis/summary"
-DELTA_RESOURCES_PATH = "/api/v1/analyze/deltaAnalysis/resources"
-DELTA_POLICY_DIFF_PATH = "/api/v1/analyze/deltaAnalysis/policyDiff"
-ANOMALY_DETAILS_PATH = "/api/v1/analyze/anomalies/details"
-COMPLIANCE_SUMMARY_PATH = "/api/v1/analyze/complianceReport/summary"
-COMPLIANCE_RULES_PATH = "/api/v1/analyze/complianceReport/ruleDetails"
+
+@pytest.fixture(autouse=True)
+def reset_nd_settings() -> Iterator[None]:
+    saved = os.environ.copy()
+    nd_settings._configured_fabrics = []
+    nd_settings._loaded_config_path = None
+    yield
+    os.environ.clear()
+    os.environ.update(saved)
+    nd_settings._configured_fabrics = []
+    nd_settings._loaded_config_path = None
+
 
 SNAP_PRE = {
     "snapshotId": "snap-pre",
@@ -137,20 +153,73 @@ def build_lab(*, new_critical: int = 0, violated: int = 0) -> Lab:
     )
 
 
-@pytest.fixture
-def use_lab(monkeypatch: pytest.MonkeyPatch) -> object:
-    """Patch the CLI's client so every request routes through a Lab."""
+def _write_config(
+    tmp_path: Path,
+    *,
+    fabrics: list[str] | None = None,
+    include_fabric: bool = True,
+) -> None:
+    lines = [
+        "nexus_dashboard:",
+        "  host: nd.test",
+        "  verify_ssl: false",
+    ]
+    if include_fabric and fabrics is None:
+        lines.append("  fabric: FABRIC-A")
+    if fabrics is not None:
+        lines.append("  fabrics:")
+        lines.extend(f"    - {name}" for name in fabrics)
+    (tmp_path / "nac-analytics.yaml").write_text("\n".join(lines) + "\n")
 
-    def install(lab: Lab) -> None:
-        def factory(config: object, **_: object) -> RealNDClient:
-            http = httpx.Client(transport=httpx.MockTransport(lab))
-            return RealNDClient(config, http=http)  # type: ignore[arg-type]
 
-        monkeypatch.setattr(
-            "nac_analytics.products.nexus_dashboard.cli.NDClient", factory
+def _load_config(tmp_path: Path) -> None:
+    path = tmp_path / "nac-analytics.yaml"
+    apply_settings(select_product_section(load_settings(path), path=path), path=path)
+
+
+def _compliance_route(*, violated_by_fabric: dict[str, int]) -> object:
+    def handler(request: httpx.Request) -> httpx.Response:
+        fabric = request.url.params.get("fabricName", "FABRIC-A")
+        violated = violated_by_fabric.get(fabric, 0)
+        timestamp = "2026-08-07T10:01:00Z"
+        if request.url.path.endswith("/summary"):
+            return json_response(_compliance_summary(timestamp, violated=violated))
+        return json_response(
+            {
+                "collectionTimestamp": timestamp,
+                "rules": [
+                    {
+                        "ruleName": "r1",
+                        "ruleType": "configuration",
+                        "violationsCount": violated,
+                    }
+                ],
+            }
         )
 
-    return install
+    return handler
+
+
+def build_multi_fabric_lab(*, violated_by_fabric: dict[str, int] | None = None) -> Lab:
+    violated = violated_by_fabric or {"FABRIC-A": 0, "FABRIC-B": 0}
+    return Lab(
+        {
+            FABRICS_PATH: json_response(
+                {
+                    "fabrics": [
+                        {"name": "FABRIC-A", "management": {"type": "aci"}},
+                        {"name": "FABRIC-B", "management": {"type": "aci"}},
+                    ]
+                }
+            ),
+            SNAPSHOTS_PATH: json_response({"snapshots": [SNAP_POST, SNAP_PRE]}),
+            LOGIN_DOMAINS_PATH: json_response(
+                {"defaultDomain": "DefaultAuth", "domains": [{"name": "DefaultAuth"}]}
+            ),
+            COMPLIANCE_SUMMARY_PATH: _compliance_route(violated_by_fabric=violated),
+            COMPLIANCE_RULES_PATH: _compliance_route(violated_by_fabric=violated),
+        }
+    )
 
 
 def test_doctor_reports_connectivity(
@@ -252,3 +321,50 @@ def test_compliance_fails_on_violations(
     result = runner.invoke(app, ["nd", "compliance", "--fail-on-violations"], env=ENV)
 
     assert result.exit_code == AnomalyThresholdError.exit_code
+
+
+def test_compliance_all_reports_every_configured_fabric(
+    use_lab, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    _write_config(tmp_path, fabrics=["FABRIC-A", "FABRIC-B"])
+    _load_config(tmp_path)
+    use_lab(build_multi_fabric_lab())
+
+    result = runner.invoke(
+        app, ["nd", "compliance", "--all", "--output", "json"], env=ENV
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "FABRIC-A" in result.output
+    assert "FABRIC-B" in result.output
+
+
+def test_compliance_all_fails_on_violations_when_any_fabric_violates(
+    use_lab, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    _write_config(tmp_path, fabrics=["FABRIC-A", "FABRIC-B"])
+    _load_config(tmp_path)
+    use_lab(build_multi_fabric_lab(violated_by_fabric={"FABRIC-A": 0, "FABRIC-B": 1}))
+
+    result = runner.invoke(
+        app, ["nd", "compliance", "--all", "--fail-on-violations"], env=ENV
+    )
+
+    assert result.exit_code == AnomalyThresholdError.exit_code
+    assert "FABRIC-B" in result.output
+
+
+def test_compliance_all_without_fabrics_exits_4(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    _write_config(tmp_path, include_fabric=False)
+    _load_config(tmp_path)
+    env = {key: value for key, value in ENV.items() if key != "ND_FABRIC"}
+
+    result = runner.invoke(app, ["nd", "compliance", "--all"], env=env)
+
+    assert result.exit_code == InputError.exit_code
+    assert "requires fabrics" in result.output

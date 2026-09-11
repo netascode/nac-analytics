@@ -6,8 +6,8 @@ import logging
 
 import pytest
 
-from nac_analytics.core.config import Config
 from nac_analytics.core.redaction import REDACTED, install_redaction_filter, redact
+from nac_analytics.products.nexus_dashboard.config import Config
 
 JWT = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiJ9.c2lnbmF0dXJl"
 

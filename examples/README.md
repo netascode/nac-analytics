@@ -6,6 +6,8 @@ Optional **lab reference material** for trying change-analysis workflows against
 | --- | --- |
 | Nexus Dashboard | [nexus_dashboard/README.md](nexus_dashboard/README.md) |
 
-For normal use, install from PyPI, copy [config.example.yaml](../config.example.yaml) and [.env.example](../.env.example), and run the CLI — no files from `examples/` are required.
+**Config templates** (required for use) live under each product's `config/` subdirectory — not optional lab material. For Nexus Dashboard, copy [config.example.yaml](nexus_dashboard/config/config.example.yaml) and [env.example](nexus_dashboard/config/env.example) to `nac-analytics.yaml` and `.env` in your working directory.
+
+**Lab scripts** in the rest of this directory are optional. Install from PyPI and use the templates above; you do not need Terraform or pipeline scripts for normal use.
 
 Future products will get their own subdirectories under `examples/` following the same layout.

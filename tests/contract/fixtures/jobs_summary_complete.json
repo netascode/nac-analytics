@@ -1,0 +1,10 @@
+{
+  "entries": [
+    {
+      "jobId": "delta-1",
+      "jobType": "EPOCH-DELTA-ANALYSIS",
+      "status": "COMPLETE",
+      "fabricName": "FABRIC-A"
+    }
+  ]
+}

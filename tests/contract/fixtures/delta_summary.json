@@ -1,0 +1,13 @@
+{
+  "newAnomaliesCount": 1,
+  "anomalyCountBySeverity": [
+    {
+      "severity": "major",
+      "newCount": 1,
+      "clearedCount": 0,
+      "unchangedCount": 0,
+      "earlierCount": 0,
+      "laterCount": 0
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "jobId": "pc-1",
+  "name": "pc-1",
+  "fabricName": "FABRIC-A",
+  "analysisStatus": "completed",
+  "analysisScheduleId": "sched-1",
+  "baseSnapshotId": "snap-pre",
+  "spanshotDeltaJobId": "delta-1",
+  "uploadedFileName": "plan.json",
+  "analysisSubmissionTime": "2026-08-07T10:00:00Z"
+}
