@@ -1,6 +1,5 @@
 # nac-analytics
 
-> **In development** — install from source today; PyPI release planned.
 > Formerly **nac-nd**. Today it covers Cisco ACI via Nexus Dashboard 4.2.1+; the intent is to grow beyond Nexus Dashboard and add support for additional Cisco products, so one tool can drive change analytics across platforms.
 
 CLI for change analysis on Cisco ACI fabrics via Nexus Dashboard 4.2.1+.
@@ -12,13 +11,13 @@ Today the product is `nexus-dashboard` (alias `nd`); more products are planned.
 
 | Topic | Link |
 | --- | --- |
-| Documentation hub | [docs/README.md](docs/README.md) |
-| Nexus Dashboard | [docs/nexus-dashboard.md](docs/nexus-dashboard.md) |
-| Command reference | [docs/commands/README.md](docs/commands/README.md) |
-| Exit codes | [docs/exit-codes.md](docs/exit-codes.md) |
-| Configuration | [docs/configuration.md](docs/configuration.md) |
-| Examples & CI | [examples/README.md](examples/README.md) |
-| Development | [docs/development.md](docs/development.md) |
+| Documentation hub | [docs/README.md](https://github.com/netascode/nac-analytics/blob/main/docs/README.md) |
+| Nexus Dashboard | [docs/nexus-dashboard.md](https://github.com/netascode/nac-analytics/blob/main/docs/nexus-dashboard.md) |
+| Command reference | [docs/commands/README.md](https://github.com/netascode/nac-analytics/blob/main/docs/commands/README.md) |
+| Exit codes | [docs/exit-codes.md](https://github.com/netascode/nac-analytics/blob/main/docs/exit-codes.md) |
+| Configuration | [docs/configuration.md](https://github.com/netascode/nac-analytics/blob/main/docs/configuration.md) |
+| Examples & CI | [examples/README.md](https://github.com/netascode/nac-analytics/blob/main/examples/README.md) |
+| Development | [docs/development.md](https://github.com/netascode/nac-analytics/blob/main/docs/development.md) |
 
 ## Nexus Dashboard Examples - delta & compliance
 
@@ -65,7 +64,7 @@ Compliance:
     ruleName=no-open-tenant  ruleType=configuration  violationsCount=1
 ```
 
-See [prechange](docs/commands/nexus-dashboard/prechange.md), [delta](docs/commands/nexus-dashboard/delta.md), and [compliance](docs/commands/nexus-dashboard/compliance.md) for usage.
+See [prechange](https://github.com/netascode/nac-analytics/blob/main/docs/commands/nexus-dashboard/prechange.md), [delta](https://github.com/netascode/nac-analytics/blob/main/docs/commands/nexus-dashboard/delta.md), and [compliance](https://github.com/netascode/nac-analytics/blob/main/docs/commands/nexus-dashboard/compliance.md) for usage.
 
 ## Installation
 
@@ -108,8 +107,8 @@ When working from a source checkout, prefix commands with `uv run` (for example 
 
 Precedence: CLI flags → environment variables → YAML → `.env` in cwd.
 
-Settings are scoped per product. See [config.example.yaml](config.example.yaml) and [Configuration](docs/configuration.md).
+Settings are scoped per product. See [config.example.yaml](https://github.com/netascode/nac-analytics/blob/main/config.example.yaml) and [Configuration](https://github.com/netascode/nac-analytics/blob/main/docs/configuration.md).
 
 ## Development
 
-Contributors: see [Development](docs/development.md).
+Contributors: see [Development](https://github.com/netascode/nac-analytics/blob/main/docs/development.md).

@@ -1,6 +1,6 @@
 [project]
 name = "nac-analytics"
-version = "0.1.0"
+version = "0.1.1"
 description = "Change analysis for Cisco Nexus Dashboard 4.2.1+."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -37,7 +37,7 @@ dependencies = [
 [project.urls]
 homepage = "https://github.com/netascode/nac-analytics"
 repository = "https://github.com/netascode/nac-analytics"
-documentation = "https://github.com/netascode/nac-analytics#readme"
+documentation = "https://github.com/netascode/nac-analytics/blob/main/docs/README.md"
 issues = "https://github.com/netascode/nac-analytics/issues"
 
 [project.scripts]
