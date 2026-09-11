@@ -1,11 +1,10 @@
 # nac-analytics
 
-> Formerly **nac-nd**. Today it covers Cisco ACI via Nexus Dashboard 4.2.1+; the intent is to grow beyond Nexus Dashboard and add support for additional Cisco products, so one tool can drive change analytics across platforms.
+> Today it covers Cisco ACI via Nexus Dashboard 4.2.1+; the intent is to grow beyond Nexus Dashboard and add support for additional Cisco products, so one tool can drive change analytics across platforms.
 
 CLI for change analysis on Cisco ACI fabrics via Nexus Dashboard 4.2.1+.
 
 Commands are grouped per Cisco product: `nac-analytics <product> <command>`.
-Today the product is `nexus-dashboard` (alias `nd`); more products are planned.
 
 ## Documentation
 
@@ -16,10 +15,9 @@ Today the product is `nexus-dashboard` (alias `nd`); more products are planned.
 | Command reference | [docs/commands/README.md](https://github.com/netascode/nac-analytics/blob/main/docs/commands/README.md) |
 | Exit codes | [docs/exit-codes.md](https://github.com/netascode/nac-analytics/blob/main/docs/exit-codes.md) |
 | Configuration | [docs/configuration.md](https://github.com/netascode/nac-analytics/blob/main/docs/configuration.md) |
-| Examples & CI | [examples/README.md](https://github.com/netascode/nac-analytics/blob/main/examples/README.md) |
-| Development | [docs/development.md](https://github.com/netascode/nac-analytics/blob/main/docs/development.md) |
+| Examples (optional lab scripts) | [examples/README.md](https://github.com/netascode/nac-analytics/blob/main/examples/README.md) |
 
-## Nexus Dashboard Examples - delta & compliance
+## Example output
 
 **delta** — compare snapshots after a change:
 
@@ -84,15 +82,6 @@ uv tool install nac-analytics
 nac-analytics --help
 ```
 
-For development from source:
-
-```bash
-git clone https://github.com/netascode/nac-analytics.git
-cd nac-analytics
-uv sync --extra dev
-uv run nac-analytics --help
-```
-
 ## Quick start
 
 ```bash
@@ -101,14 +90,4 @@ cp .env.example .env                 # set ND_USER and ND_PASSWORD
 nac-analytics nd doctor
 ```
 
-When working from a source checkout, prefix commands with `uv run` (for example `uv run nac-analytics nd doctor`).
-
-## Configuration
-
-Precedence: CLI flags → environment variables → YAML → `.env` in cwd.
-
-Settings are scoped per product. See [config.example.yaml](https://github.com/netascode/nac-analytics/blob/main/config.example.yaml) and [Configuration](https://github.com/netascode/nac-analytics/blob/main/docs/configuration.md).
-
-## Development
-
-Contributors: see [Development](https://github.com/netascode/nac-analytics/blob/main/docs/development.md).
+The config files above are sufficient for normal use. See [examples](https://github.com/netascode/nac-analytics/blob/main/examples/README.md) only if you want an optional lab walkthrough with Terraform.

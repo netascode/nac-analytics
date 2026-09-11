@@ -45,11 +45,4 @@ Commands:
 
 ## Commands
 
-| Verb | Summary |
-| --- | --- |
-| [prechange](commands/nexus-dashboard/prechange.md) | Gate a planned change — Terraform plan JSON or APIC MO JSON |
-| [delta](commands/nexus-dashboard/delta.md) | Post-change comparison between two snapshots |
-| [snapshots](commands/nexus-dashboard/snapshots.md) | Print a snapshot ID for pipeline pinning |
-| [analyze](commands/nexus-dashboard/analyze.md) | Trigger an assurance analysis and print the snapshot it produces |
-| [compliance](commands/nexus-dashboard/compliance.md) | Fabric compliance rules; optional `--fail-on-violations` |
-| [doctor](commands/nexus-dashboard/doctor.md) | Read-only connectivity and credential check |
+Verb summaries and per-command guides: [Nexus Dashboard commands](commands/nexus-dashboard/README.md).

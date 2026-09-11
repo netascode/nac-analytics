@@ -30,7 +30,6 @@ junit.xml
 .env.*
 !.env.example
 nac-analytics.yaml
-nac-nd.yaml
 
 # Local analysis artefacts (may contain TF variables / credentials)
 plan.json
@@ -46,6 +45,7 @@ spec/
 # Editors
 .vscode/
 .idea/
+.cursor/
 .*.swp
 
 # macOS
