@@ -71,10 +71,26 @@ See [prechange](docs/commands/nexus-dashboard/prechange.md), [delta](docs/comman
 
 **Requirements:** Nexus Dashboard 4.2.1+, Python 3.10+, an ACI fabric registered in Nexus Dashboard.
 
+Install from PyPI:
+
+```bash
+pip install nac-analytics
+nac-analytics --help
+```
+
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv tool install nac-analytics
+nac-analytics --help
+```
+
+For development from source:
+
 ```bash
 git clone https://github.com/netascode/nac-analytics.git
 cd nac-analytics
-uv sync --group dev
+uv sync --extra dev
 uv run nac-analytics --help
 ```
 
@@ -83,8 +99,10 @@ uv run nac-analytics --help
 ```bash
 cp config.example.yaml nac-analytics.yaml   # edit host, fabric, domain
 cp .env.example .env                 # set ND_USER and ND_PASSWORD
-uv run nac-analytics nd doctor
+nac-analytics nd doctor
 ```
+
+When working from a source checkout, prefix commands with `uv run` (for example `uv run nac-analytics nd doctor`).
 
 ## Configuration
 
