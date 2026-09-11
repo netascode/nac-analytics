@@ -102,7 +102,7 @@ def _coerce_env_value(key: str, value: Any) -> str:
     return str(value)
 
 
-def _normalise_fabrics(raw: Any) -> list[str]:
+def _normalize_fabrics(raw: Any) -> list[str]:
     if not isinstance(raw, list):
         raise InputError("Config key 'fabrics' must be a list of fabric names.")
     fabrics = [str(item).strip() for item in raw if str(item).strip()]
@@ -174,7 +174,7 @@ def apply_settings(data: dict[str, Any], *, path: Path | None = None) -> None:
 
     fabrics_raw = data.get("fabrics")
     if fabrics_raw is not None:
-        _configured_fabrics = _normalise_fabrics(fabrics_raw)
+        _configured_fabrics = _normalize_fabrics(fabrics_raw)
     elif data.get("fabric"):
         _configured_fabrics = [str(data["fabric"]).strip()]
     else:

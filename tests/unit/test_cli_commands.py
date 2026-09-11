@@ -145,7 +145,7 @@ def use_lab(monkeypatch: pytest.MonkeyPatch) -> object:
             return RealNDClient(config, http=http)  # type: ignore[arg-type]
 
         monkeypatch.setattr(
-            "nac_analytics.products.nexus_dashboard.cli.NDClient", factory
+            "nac_analytics.products.nexus_dashboard.cli_support.NDClient", factory
         )
 
     return install
@@ -250,3 +250,68 @@ def test_compliance_fails_on_violations(
     result = runner.invoke(app, ["nd", "compliance", "--fail-on-violations"], env=ENV)
 
     assert result.exit_code == AnomalyThresholdError.exit_code
+
+
+def test_compliance_all_reports_each_fabric(
+    use_lab, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        "nac_analytics.products.nexus_dashboard.cli.configured_fabrics",
+        lambda: ["FABRIC-A", "FABRIC-B"],
+    )
+    lab_routes = dict(build_lab().routes)
+    lab_routes[FABRICS_PATH] = json_response(
+        {
+            "fabrics": [
+                {"name": "FABRIC-A", "management": {"type": "aci"}},
+                {"name": "FABRIC-B", "management": {"type": "aci"}},
+            ]
+        }
+    )
+    use_lab(Lab(lab_routes))
+
+    result = runner.invoke(
+        app,
+        ["nd", "compliance", "--all", "--output", "json"],
+        env={k: v for k, v in ENV.items() if k != "ND_FABRIC"},
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "FABRIC-A" in result.output
+    assert "FABRIC-B" in result.output
+
+
+def test_delta_markdown_output(
+    use_lab, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    use_lab(build_lab())
+
+    result = runner.invoke(
+        app,
+        ["nd", "delta", "--output", "markdown", "--report-file", "-"],
+        env=ENV,
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "# nac-analytics delta" in result.output
+
+
+def test_prechange_cleanup_warnings_in_text_output(
+    use_lab, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    use_lab(build_lab())
+    plan = tmp_path / "plan.json"
+    plan.write_text('{"imdata": [{"fvTenant": {"attributes": {"name": "X"}}}]}')
+
+    result = runner.invoke(
+        app,
+        ["nd", "prechange", str(plan), "--cleanup", "--output", "text"],
+        env=ENV,
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "warning:" in result.output
+    assert "DELETE route on the GA API" in result.output

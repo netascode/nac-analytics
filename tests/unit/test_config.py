@@ -1,10 +1,10 @@
-"""Configuration validation and host normalisation."""
+"""Configuration validation and host normalization."""
 
 from __future__ import annotations
 
 import pytest
 
-from nac_analytics.core.config import Config, normalise_host
+from nac_analytics.core.config import Config, normalize_host
 from nac_analytics.core.exceptions import InputError
 
 
@@ -21,10 +21,10 @@ from nac_analytics.core.exceptions import InputError
 )
 def test_a_scheme_in_the_host_is_stripped(given: str, expected: str) -> None:
     """A host carrying its own scheme would produce `https://https://...`."""
-    assert normalise_host(given) == expected
+    assert normalize_host(given) == expected
 
 
-def test_the_base_url_is_built_from_the_normalised_host() -> None:
+def test_the_base_url_is_built_from_the_normalized_host() -> None:
     config = Config(host="https://nd.example.com/", username="u", password="p")
 
     assert config.base_url == "https://nd.example.com"

@@ -7,7 +7,6 @@ from typing import Any
 
 from nac_analytics.products.nexus_dashboard.delta import (
     normalize_delta_detail,
-    summary_new_count,
 )
 
 _POLICY_DIFF_CAP = 20
@@ -161,13 +160,6 @@ def _render_anomalies(
             lines = [f"  listed: {len(records)}  unique: {len(deduped)}"]
     else:
         lines = [f"  listed: {len(records)}  unique: {len(deduped)}"]
-    if anomaly_summary:
-        expected = summary_new_count(anomaly_summary)
-        if expected and len(records) != expected:
-            lines.append(
-                f"  warning: summary reports {expected} new anomalies; this list "
-                "may include fabric-wide state rather than delta-only rows."
-            )
     if not deduped:
         lines.append("  (no anomaly records returned)")
         return lines

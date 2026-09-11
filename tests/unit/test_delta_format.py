@@ -87,7 +87,7 @@ def test_full_detail_shows_unchanged_resource_types() -> None:
     assert "vlan" in "\n".join(lines)
 
 
-def test_anomalies_render_mnemonic_rows_and_mismatch_hint() -> None:
+def test_anomalies_render_mnemonic_rows_and_dedupes() -> None:
     summary = {
         "anomalyCountBySeverity": [
             {"severity": "major", "newCount": 2},
@@ -130,7 +130,6 @@ def test_anomalies_render_mnemonic_rows_and_mismatch_hint() -> None:
     assert "ENDPOINT_DUPLICATE_IP" in text
     assert "duplicate ip detected" in text
     assert "duplicate row(s) collapsed" in text
-    assert "summary reports 2 new anomalies" in text
 
 
 def test_policy_diff_shows_changed_lines_only() -> None:

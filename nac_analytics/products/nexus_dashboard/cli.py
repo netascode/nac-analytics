@@ -7,45 +7,48 @@ reporting for `nac-analytics nexus-dashboard <verb>`.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Annotated, Any, Optional
+from typing import Annotated, Optional
 
 import typer
 from typer._click.core import ParameterSource
 
-from nac_analytics.core.config import DEFAULT_DOMAIN, Config, normalise_host
+from nac_analytics.core.config import DEFAULT_DOMAIN, normalize_host
 from nac_analytics.core.exceptions import (
     AnomalyThresholdError,
     ApiError,
     AuthError,
     InputError,
-    NacNdError,
 )
-from nac_analytics.core.log import configure_logging
 from nac_analytics.core.progress import note
 from nac_analytics.core.report import (
     DEFAULT_FAIL_ON,
     GATE_DEFAULT_OUTPUT,
-    GATE_REPORT_FILES,
-    OUTPUT_FORMATS,
     MultiFabricResult,
     Result,
     parse_fail_on,
-    render,
     render_multi,
-    serialize_structured,
+)
+from nac_analytics.products.nexus_dashboard.cli_support import (
+    GATE_OUTPUT_HELP,
+    GENERAL_OUTPUT_HELP,
+    auto_name,
+    configure_cli_logging,
+    emit,
+    emit_snapshot,
+    extend_warnings,
+    handle_cli_errors,
+    nd_session,
+    prechange_result_from_job,
+    resolve_pre_post,
+    run_gate_command,
 )
 from nac_analytics.products.nexus_dashboard.client import (
-    NDClient,
     fabric_name,
     is_aci_fabric,
-    prechange_delta_job_id,
     resolve_snapshot_ids,
 )
 from nac_analytics.products.nexus_dashboard.compliance import (
-    compliance_for_snapshot,
-    prechange_job_details,
     run_compliance_check,
     snapshot_details,
 )
@@ -88,14 +91,6 @@ app = typer.Typer(
     add_completion=False,
     no_args_is_help=True,
 )
-
-
-def _prechange_ui_url(base_url: str) -> str:
-    """Nexus Dashboard Pre-Change Analysis page (same as nexus-pcv --output-url)."""
-    return (
-        f"{base_url}/appcenter/cisco/nexus-insights/ui/"
-        "#/changeManagement/preChangeAnalysis"
-    )
 
 
 # -- shared options --------------------------------------------------------
@@ -155,14 +150,7 @@ PollOpt = Annotated[
 ]
 OutputOpt = Annotated[
     str,
-    typer.Option(
-        "--output",
-        "-o",
-        help=(
-            f"Output format: {', '.join(OUTPUT_FORMATS)}. "
-            "junit writes one test case per --fail-on severity (prechange/delta)."
-        ),
-    ),
+    typer.Option("--output", "-o", help=GENERAL_OUTPUT_HELP),
 ]
 VerboseOpt = Annotated[
     bool,
@@ -245,203 +233,8 @@ ReportFileOpt = Annotated[
 ]
 GateOutputOpt = Annotated[
     str,
-    typer.Option(
-        "--output",
-        "-o",
-        help=(
-            f"Output format: {', '.join(OUTPUT_FORMATS)}. "
-            "Gate commands default to junit (written to --report-file)."
-        ),
-    ),
+    typer.Option("--output", "-o", help=GATE_OUTPUT_HELP),
 ]
-
-
-# -- plumbing --------------------------------------------------------------
-
-
-def _configure_logging(verbose: bool) -> None:
-    configure_logging(verbose)
-
-
-def _extend_warnings(result: Result, client: NDClient) -> None:
-    if client.notices:
-        result.warnings.extend(client.notices)
-
-
-def _connect_message(config: Config) -> str:
-    return f"Connecting to {config.host} as {config.username}..."
-
-
-def _fail(exc: Exception, verbose: bool) -> typer.Exit:
-    code = exc.exit_code if isinstance(exc, NacNdError) else 1
-    if verbose:
-        logger.exception("%s", exc)
-    typer.secho(f"error: {exc}", fg=typer.colors.RED, err=True)
-    return typer.Exit(code=code)
-
-
-def _build_config(
-    *,
-    host: str | None,
-    username: str | None,
-    password: str | None,
-    domain: str,
-    fabric: str | None,
-    verify_ssl: bool,
-    ca_bundle: str | None,
-    timeout: int,
-    poll_interval: int,
-) -> Config:
-    if not fabric:
-        raise InputError(
-            "A fabric is required (--fabric, ND_FABRIC, or YAML `fabric`)."
-        )
-    return Config(
-        host=host or "",
-        username=username or "",
-        password=password or "",
-        domain=domain,
-        fabric=fabric,
-        verify_ssl=verify_ssl,
-        ca_bundle=ca_bundle,
-        request_timeout_seconds=60.0,
-        poll_interval_seconds=poll_interval,
-        job_timeout_minutes=timeout,
-    )
-
-
-def _auto_name(prefix: str) -> str:
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    return f"nac-analytics-{prefix}-{stamp}"
-
-
-def _prechange_result_from_job(
-    client: NDClient,
-    config: Config,
-    *,
-    job: dict[str, Any],
-    job_id: str,
-    job_name: str,
-    config_file: Path | None,
-    thresholds: tuple[str, ...],
-    detail_level: str,
-    include_acknowledged: bool,
-    since: str | None,
-    until: str | None,
-) -> Result:
-    """Collect gate results from a finished pre-change analysis job."""
-    job_fabric = str(job.get("fabricName", "")).strip()
-    if job_fabric and job_fabric != config.fabric:
-        raise InputError(
-            f"Pre-change analysis {job_id} belongs to fabric {job_fabric!r}, "
-            f"not {config.fabric!r}."
-        )
-    base_snapshot_id = str(job.get("baseSnapshotId", "")).strip()
-    if not base_snapshot_id:
-        raise InputError(
-            f"Pre-change analysis {job_id} has no baseSnapshotId; "
-            "cannot load baseline compliance."
-        )
-    snapshot = client.resolve_snapshot(
-        config.fabric,
-        base_snapshot_id,
-        start_date=since,
-        end_date=until,
-    )
-    delta_job_id = prechange_delta_job_id(job)
-    note("Collecting change approval detail...")
-    compliance = compliance_for_snapshot(
-        client,
-        config.fabric,
-        snapshot,
-        scope="baseline snapshot (before change)",
-    )
-    details: dict[str, object] = {
-        "prechange_ui_url": _prechange_ui_url(config.base_url),
-        "job_id": job_id,
-        "delta_job_id": delta_job_id,
-        **snapshot_details("base", snapshot),
-        **prechange_job_details(job),
-    }
-    uploaded = str(job.get("uploadedFileName", ""))
-    config_label = str(config_file) if config_file else uploaded
-    if config_label:
-        details["config_file"] = config_label
-    return finish_delta_analysis(
-        client,
-        command="prechange",
-        fabric=config.fabric,
-        name=job_name,
-        job_id=delta_job_id,
-        thresholds=thresholds,
-        detail_level=detail_level,
-        include_acknowledged=include_acknowledged,
-        details=details,
-        compliance=compliance,
-    )
-
-
-def _emit(result: Result, output: str) -> None:
-    typer.echo(render(result, output))
-
-
-def _emit_gate_result(
-    result: Result,
-    *,
-    output: str,
-    report_file: str | None,
-) -> None:
-    """Write gate command output: JUnit to file by default, verdict on stderr."""
-    if output == "junit":
-        rendered = render(result, "junit")
-        if report_file == "-":
-            typer.echo(rendered)
-        else:
-            path = Path(report_file or GATE_REPORT_FILES[result.command])
-            path.write_text(rendered, encoding="utf-8")
-        if result.verdict is not None:
-            status = "PASS" if result.verdict.passed else "FAIL"
-            typer.secho(f"DECISION: {status} — {result.verdict.reason}", err=True)
-        return
-    typer.echo(render(result, output))
-
-
-def _emit_snapshot(record: dict[str, object], output: str) -> None:
-    if output == "text":
-        typer.echo(str(record.get("snapshotId", "")))
-        return
-    typer.echo(serialize_structured(record, output))
-
-
-def _resolve_pre_post(
-    pre: str | None,
-    post: str | None,
-    *,
-    prior: str | None,
-    later: str | None,
-    default_pre: str,
-    default_post: str,
-) -> tuple[str, str]:
-    """Merge positional pre/post selectors with deprecated --prior/--later flags."""
-    if pre is not None:
-        pre_selector = pre
-    elif prior is not None:
-        pre_selector = prior
-    else:
-        pre_selector = default_pre
-    if post is not None:
-        post_selector = post
-    elif later is not None:
-        post_selector = later
-    else:
-        post_selector = default_post
-    return pre_selector, post_selector
-
-
-def _enforce(verdict_result: Result) -> None:
-    verdict = verdict_result.verdict
-    if verdict is not None and not verdict.passed:
-        raise AnomalyThresholdError(f"DECISION: FAIL — {verdict.reason}")
 
 
 # -- commands --------------------------------------------------------------
@@ -517,8 +310,8 @@ def prechange(
     human-readable report. Use --job-id to resume or fetch an existing analysis
     without uploading a config again.
     """
-    _configure_logging(verbose)
-    try:
+    configure_cli_logging(verbose)
+    with handle_cli_errors(verbose):
         thresholds = parse_fail_on(fail_on)
         if job_id and config_file is not None:
             raise InputError("Pass a config file or --job-id, not both.")
@@ -530,17 +323,6 @@ def prechange(
             else base_snapshot
             if base_snapshot is not None
             else "latest"
-        )
-        config = _build_config(
-            host=host,
-            username=username,
-            password=password,
-            domain=domain,
-            fabric=fabric,
-            verify_ssl=verify_ssl,
-            ca_bundle=ca_bundle,
-            timeout=timeout,
-            poll_interval=poll_interval,
         )
         detail_level = normalize_delta_detail(detail)
         upload_content: bytes | None = None
@@ -565,15 +347,23 @@ def prechange(
                 raise InputError(f"{config_file} is empty.")
             upload_content = prepare_prechange_content(content)
             upload_name = config_file.name
-        note(_connect_message(config))
-        with NDClient(config) as client:
-            client.validate_fabric(config.fabric)
+        with nd_session(
+            host=host,
+            username=username,
+            password=password,
+            domain=domain,
+            fabric=fabric,
+            verify_ssl=verify_ssl,
+            ca_bundle=ca_bundle,
+            timeout=timeout,
+            poll_interval=poll_interval,
+        ) as (config, client):
             if job_id:
                 assert resume_id is not None
                 note(f"Waiting for pre-change analysis {resume_id}...")
                 job = client.wait_prechange_analysis(resume_id)
                 job_name = name or str(job.get("name") or resume_id)
-                result = _prechange_result_from_job(
+                result = prechange_result_from_job(
                     client,
                     config,
                     job=job,
@@ -589,7 +379,7 @@ def prechange(
             else:
                 assert config_file is not None
                 assert upload_content is not None
-                job_name = name or _auto_name("prechange")
+                job_name = name or auto_name("prechange")
                 snapshot = client.resolve_snapshot(
                     config.fabric, baseline_selector, start_date=since, end_date=until
                 )
@@ -608,7 +398,7 @@ def prechange(
                     )
                 note(f"Waiting for pre-change analysis {new_job_id}...")
                 job = client.wait_prechange_analysis(new_job_id)
-                result = _prechange_result_from_job(
+                result = prechange_result_from_job(
                     client,
                     config,
                     job=job,
@@ -621,7 +411,7 @@ def prechange(
                     since=since,
                     until=until,
                 )
-            _extend_warnings(result, client)
+            extend_warnings(result, client)
             if cleanup:
                 leftover = client.cleanup_prechange(config.fabric, job)
                 if leftover:
@@ -632,10 +422,7 @@ def prechange(
                     "the pre-change snapshot this analysis created has no "
                     "DELETE route on the GA API and remains on the fabric"
                 )
-        _emit_gate_result(result, output=output, report_file=report_file)
-        _enforce(result)
-    except Exception as exc:
-        raise _fail(exc, verbose) from exc
+        run_gate_command(result, output=output, report_file=report_file)
 
 
 @app.command()
@@ -692,13 +479,13 @@ def delta(
 ) -> None:
     """Compare two snapshots of a fabric and report what changed.
 
-    Usage: nac-analytics delta [pre] [post] — defaults to latest-1 vs latest.
+    Usage: nac-analytics nd delta [pre] [post] — defaults to latest-1 vs latest.
     By default writes JUnit to delta-report.xml and exits 3 on critical/major.
     """
-    _configure_logging(verbose)
-    try:
+    configure_cli_logging(verbose)
+    with handle_cli_errors(verbose):
         thresholds = parse_fail_on(fail_on)
-        pre_selector, post_selector = _resolve_pre_post(
+        pre_selector, post_selector = resolve_pre_post(
             pre,
             post,
             prior=prior,
@@ -706,7 +493,8 @@ def delta(
             default_pre="latest-1",
             default_post="latest",
         )
-        config = _build_config(
+        job_name = name or auto_name("delta")
+        with nd_session(
             host=host,
             username=username,
             password=password,
@@ -716,11 +504,7 @@ def delta(
             ca_bundle=ca_bundle,
             timeout=timeout,
             poll_interval=poll_interval,
-        )
-        job_name = name or _auto_name("delta")
-        note(_connect_message(config))
-        with NDClient(config) as client:
-            client.validate_fabric(config.fabric)
+        ) as (config, client):
             pre_snapshot = client.resolve_snapshot(
                 config.fabric, pre_selector, start_date=since, end_date=until
             )
@@ -755,13 +539,10 @@ def delta(
                     **snapshot_details("post", post_snapshot),
                 },
             )
-            _extend_warnings(result, client)
+            extend_warnings(result, client)
             if cleanup:
                 client.remove_delta_jobs(config.fabric, [job_id])
-        _emit_gate_result(result, output=output, report_file=report_file)
-        _enforce(result)
-    except Exception as exc:
-        raise _fail(exc, verbose) from exc
+        run_gate_command(result, output=output, report_file=report_file)
 
 
 @app.command()
@@ -792,13 +573,13 @@ def snapshots(
     verbose: VerboseOpt = False,
 ) -> None:
     """Resolve a fabric snapshot and print its ID (for CI baseline pinning)."""
-    _configure_logging(verbose)
-    try:
+    configure_cli_logging(verbose)
+    with handle_cli_errors(verbose):
         if output not in ("text", "json", "yaml"):
             raise InputError(
                 f"Unknown output format '{output}'. Choose from: text, json, yaml."
             )
-        config = _build_config(
+        with nd_session(
             host=host,
             username=username,
             password=password,
@@ -808,18 +589,12 @@ def snapshots(
             ca_bundle=ca_bundle,
             timeout=30,
             poll_interval=15,
-        )
-        note(_connect_message(config))
-        with NDClient(config) as client:
-            client.validate_fabric(config.fabric)
+        ) as (config, client):
             record = client.resolve_snapshot(
                 config.fabric, selector, start_date=since, end_date=until
             )
-            for warning in client.notices:
-                typer.secho(f"warning: {warning}", fg=typer.colors.YELLOW, err=True)
-        _emit_snapshot(record, output)
-    except Exception as exc:
-        raise _fail(exc, verbose) from exc
+            snapshot_warnings = list(client.notices)
+        emit_snapshot(record, output, warnings=snapshot_warnings)
 
 
 @app.command()
@@ -871,8 +646,8 @@ def compliance(
 
     Exits 3 with --fail-on-violations when any rule is violated.
     """
-    _configure_logging(verbose)
-    try:
+    configure_cli_logging(verbose)
+    with handle_cli_errors(verbose):
         if (
             all_fabrics
             and ctx.get_parameter_source("fabric") == ParameterSource.COMMANDLINE
@@ -885,7 +660,9 @@ def compliance(
                     "--all requires fabrics in YAML `fabrics`, YAML `fabric`, "
                     "or ND_FABRIC."
                 )
-            config = _build_config(
+            results: list[Result] = []
+            failed: list[str] = []
+            with nd_session(
                 host=host,
                 username=username,
                 password=password,
@@ -895,11 +672,7 @@ def compliance(
                 ca_bundle=ca_bundle,
                 timeout=timeout,
                 poll_interval=poll_interval,
-            )
-            results: list[Result] = []
-            failed: list[str] = []
-            note(_connect_message(config))
-            with NDClient(config) as client:
+            ) as (_config, client):
                 for name in fabrics:
                     note(f"Checking compliance for {name}...")
                     client.validate_fabric(name)
@@ -910,7 +683,7 @@ def compliance(
                         since=since,
                         until=until,
                     )
-                    _extend_warnings(result, client)
+                    extend_warnings(result, client)
                     results.append(result)
                     if violated:
                         failed.append(name)
@@ -926,7 +699,7 @@ def compliance(
                 )
             return
 
-        config = _build_config(
+        with nd_session(
             host=host,
             username=username,
             password=password,
@@ -936,10 +709,7 @@ def compliance(
             ca_bundle=ca_bundle,
             timeout=timeout,
             poll_interval=poll_interval,
-        )
-        note(_connect_message(config))
-        with NDClient(config) as client:
-            client.validate_fabric(config.fabric)
+        ) as (config, client):
             note(f"Checking compliance for {config.fabric}...")
             result, violated = run_compliance_check(
                 client,
@@ -948,14 +718,12 @@ def compliance(
                 since=since,
                 until=until,
             )
-            _extend_warnings(result, client)
-        _emit(result, output)
+            extend_warnings(result, client)
+        emit(result, output)
         if fail_on_violations and violated:
             raise AnomalyThresholdError(
                 f"{violated} compliance rule(s) are violated on {config.fabric}."
             )
-    except Exception as exc:
-        raise _fail(exc, verbose) from exc
 
 
 @app.command()
@@ -975,9 +743,10 @@ def doctor(
     Read-only; creates no jobs. Requires the same connection settings as other
     commands (--host, credentials, --fabric or ND_FABRIC).
     """
-    _configure_logging(verbose)
-    try:
-        config = _build_config(
+    configure_cli_logging(verbose)
+    with handle_cli_errors(verbose):
+        warnings: list[str] = []
+        with nd_session(
             host=host,
             username=username,
             password=password,
@@ -987,15 +756,12 @@ def doctor(
             ca_bundle=ca_bundle,
             timeout=30,
             poll_interval=15,
-        )
-        details: dict[str, object] = {
-            "base_url": config.base_url,
-            "normalised_host": normalise_host(host or ""),
-            "tls_verification": "on" if verify_ssl or ca_bundle else "OFF",
-        }
-        warnings: list[str] = []
-        note(_connect_message(config))
-        with NDClient(config) as client:
+        ) as (config, client):
+            details: dict[str, object] = {
+                "base_url": config.base_url,
+                "normalized_host": normalize_host(host or ""),
+                "tls_verification": "on" if verify_ssl or ca_bundle else "OFF",
+            }
             domains = client.login_domains()
             known = [
                 str(item.get("name", ""))
@@ -1027,7 +793,7 @@ def doctor(
                 snapshots[0].get("collectionTimestamp", "") if snapshots else "(none)"
             )
             warnings.extend(client.notices)
-        _emit(
+        emit(
             Result(
                 command="doctor",
                 fabric=config.fabric,
@@ -1036,5 +802,3 @@ def doctor(
             ),
             output,
         )
-    except Exception as exc:
-        raise _fail(exc, verbose) from exc

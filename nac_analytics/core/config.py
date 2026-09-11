@@ -11,7 +11,7 @@ from nac_analytics.core.exceptions import InputError
 DEFAULT_DOMAIN = "DefaultAuth"
 
 
-def normalise_host(host: str) -> str:
+def normalize_host(host: str) -> str:
     """Strip any URL scheme and trailing slashes from a host.
 
     A host carrying its own scheme would produce `https://https://...`.

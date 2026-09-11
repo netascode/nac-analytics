@@ -20,7 +20,7 @@ import nac_analytics
 from nac_analytics.cli import app, main
 from nac_analytics.core.exceptions import AnomalyThresholdError, InputError, JobError
 from nac_analytics.core.report import DEFAULT_FAIL_ON, Result, build_verdict
-from nac_analytics.products.nexus_dashboard.cli import _enforce, _prechange_ui_url
+from nac_analytics.products.nexus_dashboard.cli_support import enforce, prechange_ui_url
 from nac_analytics.products.nexus_dashboard.settings import apply_legacy_env_aliases
 
 runner = CliRunner()
@@ -53,7 +53,7 @@ def test_enforce_raises_exit_3_when_decision_is_fail() -> None:
     )
 
     with pytest.raises(AnomalyThresholdError) as caught:
-        _enforce(result)
+        enforce(result)
 
     assert caught.value.exit_code == 3
     assert str(caught.value).startswith("DECISION: FAIL —")
@@ -66,7 +66,7 @@ def test_enforce_does_not_raise_when_decision_is_pass() -> None:
         verdict=build_verdict({"newAnomaliesCount": 0}, DEFAULT_FAIL_ON),
     )
 
-    _enforce(result)
+    enforce(result)
 
 
 def test_a_missing_config_file_exits_4_not_click_s_usage_code(tmp_path: Path) -> None:
@@ -201,7 +201,7 @@ def test_running_without_a_dotenv_does_not_error(
 
 
 def test_prechange_ui_url_points_at_the_nd_prechange_page() -> None:
-    assert _prechange_ui_url("https://nd.example.com") == (
+    assert prechange_ui_url("https://nd.example.com") == (
         "https://nd.example.com/appcenter/cisco/nexus-insights/ui/"
         "#/changeManagement/preChangeAnalysis"
     )

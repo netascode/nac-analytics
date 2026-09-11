@@ -1,6 +1,5 @@
 # nac-analytics
 
-> **In development** — install from source today; PyPI release planned.
 > Formerly **nac-nd**. Today it covers Cisco ACI via Nexus Dashboard 4.2.1+; the intent is to grow beyond Nexus Dashboard and add support for additional Cisco products, so one tool can drive change analytics across platforms.
 
 CLI for change analysis on Cisco ACI fabrics via Nexus Dashboard 4.2.1+.
@@ -21,6 +20,8 @@ Today the product is `nexus-dashboard` (alias `nd`); more products are planned.
 | Development | [docs/development.md](docs/development.md) |
 
 ## Nexus Dashboard Examples - delta & compliance
+
+Gate commands (`prechange`, `delta`) default to JUnit XML report files for CI; the examples below use `-output text` for readability.
 
 **delta** — compare snapshots after a change:
 
@@ -71,10 +72,26 @@ See [prechange](docs/commands/nexus-dashboard/prechange.md), [delta](docs/comman
 
 **Requirements:** Nexus Dashboard 4.2.1+, Python 3.10+, an ACI fabric registered in Nexus Dashboard.
 
+Install from PyPI:
+
+```bash
+pip install nac-analytics
+nac-analytics --help
+```
+
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv tool install nac-analytics
+nac-analytics --help
+```
+
+For development from source:
+
 ```bash
 git clone https://github.com/netascode/nac-analytics.git
 cd nac-analytics
-uv sync --group dev
+uv sync --extra dev
 uv run nac-analytics --help
 ```
 
@@ -83,8 +100,10 @@ uv run nac-analytics --help
 ```bash
 cp config.example.yaml nac-analytics.yaml   # edit host, fabric, domain
 cp .env.example .env                 # set ND_USER and ND_PASSWORD
-uv run nac-analytics nd doctor
+nac-analytics nd doctor
 ```
+
+When working from a source checkout, prefix commands with `uv run` (for example `uv run nac-analytics nd doctor`).
 
 ## Configuration
 

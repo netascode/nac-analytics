@@ -18,7 +18,7 @@ DELTA_DETAIL_LEVELS: tuple[str, ...] = (
     "full",
 )
 
-# Accepted for backwards compatibility; normalised before use.
+# Accepted for backwards compatibility; normalized before use.
 _DELTA_DETAIL_ALIASES: dict[str, str] = {
     "all": "full",
     "summary": "none",

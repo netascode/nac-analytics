@@ -69,7 +69,7 @@ def test_an_unknown_severity_is_bad_input() -> None:
     assert "catastrophic" in str(caught.value)
 
 
-def test_severity_names_are_normalised() -> None:
+def test_severity_names_are_normalized() -> None:
     assert parse_fail_on(" MAJOR , critical ") == ("critical", "major")
 
 

@@ -7,37 +7,37 @@ being chosen at the call site.
 from __future__ import annotations
 
 
-class NacNdError(Exception):
+class NacAnalyticsError(Exception):
     """Base error. Anything unclassified exits 1."""
 
     exit_code: int = 1
 
 
-class JobError(NacNdError):
+class JobError(NacAnalyticsError):
     """An analysis job failed, stopped, vanished or timed out."""
 
     exit_code = 2
 
 
-class AnomalyThresholdError(NacNdError):
+class AnomalyThresholdError(NacAnalyticsError):
     """New anomalies were found at a severity the caller chose to fail on."""
 
     exit_code = 3
 
 
-class InputError(NacNdError):
+class InputError(NacAnalyticsError):
     """Bad arguments, bad configuration or an unusable input file."""
 
     exit_code = 4
 
 
-class AuthError(NacNdError):
-    """Authentication or authorisation against Nexus Dashboard failed."""
+class AuthError(NacAnalyticsError):
+    """Authentication or authorization against Nexus Dashboard failed."""
 
     exit_code = 5
 
 
-class ApiError(NacNdError):
+class ApiError(NacAnalyticsError):
     """Nexus Dashboard answered a request with an unexpected status."""
 
     exit_code = 1

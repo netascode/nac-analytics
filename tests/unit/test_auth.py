@@ -61,7 +61,7 @@ def test_a_401_is_retried_once_then_raises(make_client) -> None:
     )
     client = make_client(lab)
 
-    with pytest.raises(AuthError, match="Not authorised"):
+    with pytest.raises(AuthError, match="Not authorized"):
         client.list_fabrics()
 
     assert len(lab.requests_to("/api/v1/manage/fabrics")) == 2
