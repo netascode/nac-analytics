@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- Configurable HTTP request timeout for Nexus Dashboard: `--request-timeout`, `ND_REQUEST_TIMEOUT_SECONDS`, or `request_timeout_seconds` in YAML (default 60 seconds). Previously the 60-second timeout was hard-coded, so a cluster that answered slowly failed every command with `httpx.ReadTimeout`.
+
 ### Fixed
 
 - `prechange` waits for the spawned delta job before reading `/deltaAnalysis/summary`. A completed parent job can still have a running child, and a mid-run summary may contain partial counts.

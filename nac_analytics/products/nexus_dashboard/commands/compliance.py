@@ -11,7 +11,10 @@ from nac_analytics.core.exceptions import AnomalyThresholdError, InputError
 from nac_analytics.core.progress import note
 from nac_analytics.core.report import MultiFabricResult, Result, render_multi
 from nac_analytics.products.nexus_dashboard.compliance import run_compliance_check
-from nac_analytics.products.nexus_dashboard.config import DEFAULT_DOMAIN
+from nac_analytics.products.nexus_dashboard.config import (
+    DEFAULT_DOMAIN,
+    DEFAULT_REQUEST_TIMEOUT_SECONDS,
+)
 from nac_analytics.products.nexus_dashboard.settings import configured_fabrics
 
 from . import _helpers
@@ -23,6 +26,7 @@ from ._helpers import (
     OutputOpt,
     PasswordOpt,
     PollOpt,
+    RequestTimeoutOpt,
     SinceOpt,
     TimeoutOpt,
     UntilOpt,
@@ -79,6 +83,7 @@ def compliance(
     ca_bundle: CaBundleOpt = None,
     timeout: TimeoutOpt = 30,
     poll_interval: PollOpt = 15,
+    request_timeout: RequestTimeoutOpt = DEFAULT_REQUEST_TIMEOUT_SECONDS,
     verbose: VerboseOpt = False,
 ) -> None:
     """Report compliance rule status for a fabric (or every fabric with --all).
@@ -109,6 +114,7 @@ def compliance(
                 ca_bundle=ca_bundle,
                 timeout=timeout,
                 poll_interval=poll_interval,
+                request_timeout=request_timeout,
             )
             results: list[Result] = []
             failed: list[str] = []
@@ -150,6 +156,7 @@ def compliance(
             ca_bundle=ca_bundle,
             timeout=timeout,
             poll_interval=poll_interval,
+            request_timeout=request_timeout,
         )
         note(_connect_message(config))
         with _helpers.NDClient(config) as client:
