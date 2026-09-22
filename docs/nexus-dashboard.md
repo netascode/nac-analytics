@@ -16,17 +16,18 @@ Usage: nac-analytics nexus-dashboard [OPTIONS] COMMAND [ARGS]...
 Change analysis for Cisco Nexus Dashboard 4.2.1+ (GA REST APIs, ACI).
 
 Configuration:
- ND_HOST                 Nexus Dashboard hostname or IP
- ND_USER                 Login username
- ND_PASSWORD             Login password
- ND_DOMAIN               Login domain
- ND_FABRIC               Default ACI fabric name
- ND_VERIFY_SSL           Verify TLS certificate (ND_VERIFY_TLS accepted)
- ND_CA_BUNDLE            Path to CA bundle
- ND_JOB_TIMEOUT_MINUTES  Minutes to wait for analysis jobs
- ND_POLL_INTERVAL        Seconds between job status polls
- ND_DELTA_DETAIL         Default --detail for prechange and delta
- ND_CONFIG               Path to YAML config file
+ ND_HOST                     Nexus Dashboard hostname or IP
+ ND_USER                     Login username
+ ND_PASSWORD                 Login password
+ ND_DOMAIN                   Login domain
+ ND_FABRIC                   Default ACI fabric name
+ ND_VERIFY_SSL               Verify TLS certificate (ND_VERIFY_TLS accepted)
+ ND_CA_BUNDLE                Path to CA bundle
+ ND_JOB_TIMEOUT_MINUTES      Minutes to wait for analysis jobs
+ ND_POLL_INTERVAL            Seconds between job status polls
+ ND_REQUEST_TIMEOUT_SECONDS  Seconds to wait for one HTTP response
+ ND_DELTA_DETAIL             Default --detail for prechange and delta
+ ND_CONFIG                   Path to YAML config file
 
 In YAML, nest these under a `nexus_dashboard:` section. Settings load from
 CLI flags, then environment variables, nac-analytics.yaml, or .env.

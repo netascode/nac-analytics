@@ -36,7 +36,10 @@ from nac_analytics.products.nexus_dashboard.compliance import (
     prechange_job_details,
     snapshot_details,
 )
-from nac_analytics.products.nexus_dashboard.config import Config
+from nac_analytics.products.nexus_dashboard.config import (
+    DEFAULT_REQUEST_TIMEOUT_SECONDS,
+    Config,
+)
 from nac_analytics.products.nexus_dashboard.delta import (
     DELTA_DETAIL_LEVELS,
     PRECHANGE_DEFAULT_DETAIL,
@@ -101,6 +104,14 @@ PollOpt = Annotated[
         "--poll-interval",
         envvar="ND_POLL_INTERVAL",
         help="Seconds between job status polls.",
+    ),
+]
+RequestTimeoutOpt = Annotated[
+    int,
+    typer.Option(
+        "--request-timeout",
+        envvar="ND_REQUEST_TIMEOUT_SECONDS",
+        help="Seconds to wait for a single HTTP response from Nexus Dashboard.",
     ),
 ]
 OutputOpt = Annotated[
@@ -250,6 +261,7 @@ def _build_config(
     ca_bundle: str | None,
     timeout: int,
     poll_interval: int,
+    request_timeout: int = DEFAULT_REQUEST_TIMEOUT_SECONDS,
 ) -> Config:
     if not fabric:
         raise InputError(
@@ -263,7 +275,7 @@ def _build_config(
         fabric=fabric,
         verify_ssl=verify_ssl,
         ca_bundle=ca_bundle,
-        request_timeout_seconds=60.0,
+        request_timeout_seconds=request_timeout,
         poll_interval_seconds=poll_interval,
         job_timeout_minutes=timeout,
     )
