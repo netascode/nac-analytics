@@ -38,6 +38,7 @@ The authoritative key list and inline comments live in [config.example.yaml](../
 | `ca_bundle` | `ND_CA_BUNDLE` | Path to CA bundle |
 | `job_timeout_minutes` | `ND_JOB_TIMEOUT_MINUTES` | Analysis job timeout |
 | `poll_interval` | `ND_POLL_INTERVAL` | Job poll interval (seconds) |
+| `request_timeout_seconds` | `ND_REQUEST_TIMEOUT_SECONDS` | Single HTTP response timeout (seconds), default 60 |
 | `delta_detail` | `ND_DELTA_DETAIL` | Default `--detail` for prechange/delta |
 
 Minimal example:

@@ -5,7 +5,11 @@ from __future__ import annotations
 import pytest
 
 from nac_analytics.core.exceptions import InputError
-from nac_analytics.products.nexus_dashboard.config import Config, normalise_host
+from nac_analytics.products.nexus_dashboard.config import (
+    DEFAULT_REQUEST_TIMEOUT_SECONDS,
+    Config,
+    normalise_host,
+)
 
 
 @pytest.mark.parametrize(
@@ -69,3 +73,16 @@ def test_nonsensical_polling_settings_are_rejected() -> None:
         Config(host="nd", username="u", password="p", poll_interval_seconds=0)
     with pytest.raises(InputError):
         Config(host="nd", username="u", password="p", job_timeout_minutes=0)
+
+
+@pytest.mark.parametrize("seconds", [0, -1])
+def test_a_non_positive_request_timeout_is_rejected(seconds: int) -> None:
+    """httpx treats 0 as 'fail immediately', which is never what was meant."""
+    with pytest.raises(InputError, match="--request-timeout"):
+        Config(host="nd", username="u", password="p", request_timeout_seconds=seconds)
+
+
+def test_the_request_timeout_defaults_to_sixty_seconds() -> None:
+    config = Config(host="nd", username="u", password="p")
+
+    assert config.request_timeout_seconds == DEFAULT_REQUEST_TIMEOUT_SECONDS == 60

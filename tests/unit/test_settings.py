@@ -44,6 +44,26 @@ def test_a_real_environment_variable_beats_yaml(restore_environ: None) -> None:
     assert os.environ["ND_HOST"] == "real.example.com"
 
 
+def test_a_yaml_request_timeout_reaches_the_environment(
+    restore_environ: None,
+) -> None:
+    """Typer parses the env var as an int, so a float YAML value must not survive."""
+    os.environ.pop("ND_REQUEST_TIMEOUT_SECONDS", None)
+
+    apply_settings({"request_timeout_seconds": 90.0}, path=Path("nac-analytics.yaml"))
+
+    assert os.environ["ND_REQUEST_TIMEOUT_SECONDS"] == "90"
+
+
+def test_request_timeout_is_a_known_key(
+    restore_environ: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    apply_settings({"request_timeout_seconds": 90}, path=Path("x.yaml"))
+
+    assert not any("request_timeout_seconds" in r.message for r in caplog.records)
+
+
 def test_fabrics_default_from_fabric_when_the_list_is_omitted(
     restore_environ: None,
 ) -> None:

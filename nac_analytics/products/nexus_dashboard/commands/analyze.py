@@ -8,7 +8,10 @@ import typer
 
 from nac_analytics.core.exceptions import ApiError, InputError
 from nac_analytics.core.progress import note
-from nac_analytics.products.nexus_dashboard.config import DEFAULT_DOMAIN
+from nac_analytics.products.nexus_dashboard.config import (
+    DEFAULT_DOMAIN,
+    DEFAULT_REQUEST_TIMEOUT_SECONDS,
+)
 
 from . import _helpers
 from ._helpers import (
@@ -18,6 +21,7 @@ from ._helpers import (
     HostOpt,
     PasswordOpt,
     PollOpt,
+    RequestTimeoutOpt,
     TimeoutOpt,
     UserOpt,
     VerboseOpt,
@@ -57,6 +61,7 @@ def analyze(
     ] = "text",
     timeout: TimeoutOpt = 30,
     poll_interval: PollOpt = 15,
+    request_timeout: RequestTimeoutOpt = DEFAULT_REQUEST_TIMEOUT_SECONDS,
     verify_ssl: VerifyOpt = True,
     ca_bundle: CaBundleOpt = None,
     verbose: VerboseOpt = False,
@@ -78,6 +83,7 @@ def analyze(
             ca_bundle=ca_bundle,
             timeout=timeout,
             poll_interval=poll_interval,
+            request_timeout=request_timeout,
         )
         note(_connect_message(config))
         with _helpers.NDClient(config) as client:

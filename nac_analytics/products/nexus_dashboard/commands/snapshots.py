@@ -8,7 +8,10 @@ import typer
 
 from nac_analytics.core.exceptions import InputError
 from nac_analytics.core.progress import note
-from nac_analytics.products.nexus_dashboard.config import DEFAULT_DOMAIN
+from nac_analytics.products.nexus_dashboard.config import (
+    DEFAULT_DOMAIN,
+    DEFAULT_REQUEST_TIMEOUT_SECONDS,
+)
 
 from . import _helpers
 from ._helpers import (
@@ -17,6 +20,7 @@ from ._helpers import (
     FabricOpt,
     HostOpt,
     PasswordOpt,
+    RequestTimeoutOpt,
     SinceOpt,
     UntilOpt,
     UserOpt,
@@ -54,6 +58,7 @@ def snapshots(
     ] = "text",
     verify_ssl: VerifyOpt = True,
     ca_bundle: CaBundleOpt = None,
+    request_timeout: RequestTimeoutOpt = DEFAULT_REQUEST_TIMEOUT_SECONDS,
     verbose: VerboseOpt = False,
 ) -> None:
     """Resolve a fabric snapshot and print its ID (for CI baseline pinning)."""
@@ -73,6 +78,7 @@ def snapshots(
             ca_bundle=ca_bundle,
             timeout=30,
             poll_interval=15,
+            request_timeout=request_timeout,
         )
         note(_connect_message(config))
         with _helpers.NDClient(config) as client:

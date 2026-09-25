@@ -18,6 +18,8 @@ from typer.testing import CliRunner
 from nac_analytics.cli import app
 from nac_analytics.core.exceptions import AnomalyThresholdError, InputError
 from nac_analytics.products.nexus_dashboard import settings as nd_settings
+from nac_analytics.products.nexus_dashboard.client import NDClient
+from nac_analytics.products.nexus_dashboard.config import Config
 from nac_analytics.products.nexus_dashboard.settings import (
     apply_settings,
     load_settings,
@@ -232,6 +234,77 @@ def test_doctor_reports_connectivity(
 
     assert result.exit_code == 0, result.output
     assert "authenticated_as" in result.output
+
+
+def _record_configs(monkeypatch: pytest.MonkeyPatch, lab: Lab) -> list[Config]:
+    """Patch the CLI client factory, keeping every Config it is handed."""
+    seen: list[Config] = []
+
+    def factory(config: Config, **_: object) -> NDClient:
+        seen.append(config)
+        return NDClient(config, http=httpx.Client(transport=httpx.MockTransport(lab)))
+
+    monkeypatch.setattr(
+        "nac_analytics.products.nexus_dashboard.commands._helpers.NDClient", factory
+    )
+    return seen
+
+
+@pytest.mark.parametrize(
+    ("argv", "extra_env", "expected"),
+    [
+        (["nd", "doctor"], {}, 60),
+        (["nd", "doctor", "--request-timeout", "90"], {}, 90),
+        (["nd", "doctor"], {"ND_REQUEST_TIMEOUT_SECONDS": "120"}, 120),
+        # A flag beats the environment, as it does for every other setting.
+        (
+            ["nd", "doctor", "--request-timeout", "90"],
+            {"ND_REQUEST_TIMEOUT_SECONDS": "120"},
+            90,
+        ),
+    ],
+)
+def test_the_request_timeout_reaches_the_config(
+    argv: list[str],
+    extra_env: dict[str, str],
+    expected: int,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    seen = _record_configs(monkeypatch, build_lab())
+
+    result = runner.invoke(app, argv, env={**ENV, **extra_env})
+
+    assert result.exit_code == 0, result.output
+    assert [config.request_timeout_seconds for config in seen] == [expected]
+
+
+def test_the_configured_timeout_is_applied_to_the_http_client() -> None:
+    """The setting is only useful if httpx receives it; constructing does no I/O."""
+    config = Config(
+        host="nd.test",
+        username="admin",
+        password="secret",
+        fabric="FABRIC-A",
+        verify_ssl=False,
+        request_timeout_seconds=90,
+    )
+
+    with NDClient(config) as client:
+        assert client.client.timeout.read == 90
+        assert client.client.timeout.connect == 90
+
+
+def test_a_non_positive_request_timeout_exits_4(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    result = runner.invoke(app, ["nd", "doctor", "--request-timeout", "0"], env=ENV)
+
+    assert result.exit_code == InputError.exit_code
+    assert "--request-timeout" in result.output
 
 
 def test_snapshots_prints_id_only(

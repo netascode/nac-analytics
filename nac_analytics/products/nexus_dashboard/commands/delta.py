@@ -10,7 +10,10 @@ from nac_analytics.core.progress import note
 from nac_analytics.core.report import GATE_DEFAULT_OUTPUT, parse_fail_on
 from nac_analytics.products.nexus_dashboard.client import resolve_snapshot_ids
 from nac_analytics.products.nexus_dashboard.compliance import snapshot_details
-from nac_analytics.products.nexus_dashboard.config import DEFAULT_DOMAIN
+from nac_analytics.products.nexus_dashboard.config import (
+    DEFAULT_DOMAIN,
+    DEFAULT_REQUEST_TIMEOUT_SECONDS,
+)
 from nac_analytics.products.nexus_dashboard.delta import (
     DEFAULT_DELTA_DETAIL,
     normalize_delta_detail,
@@ -32,6 +35,7 @@ from ._helpers import (
     PasswordOpt,
     PollOpt,
     ReportFileOpt,
+    RequestTimeoutOpt,
     SinceOpt,
     TimeoutOpt,
     UntilOpt,
@@ -98,6 +102,7 @@ def delta(
     ca_bundle: CaBundleOpt = None,
     timeout: TimeoutOpt = 30,
     poll_interval: PollOpt = 15,
+    request_timeout: RequestTimeoutOpt = DEFAULT_REQUEST_TIMEOUT_SECONDS,
     verbose: VerboseOpt = False,
 ) -> None:
     """Compare two snapshots of a fabric and report what changed.
@@ -126,6 +131,7 @@ def delta(
             ca_bundle=ca_bundle,
             timeout=timeout,
             poll_interval=poll_interval,
+            request_timeout=request_timeout,
         )
         job_name = name or _auto_name("delta")
         note(_connect_message(config))
