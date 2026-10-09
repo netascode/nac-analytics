@@ -86,6 +86,14 @@ RN_PREFIX_CLASSNAME_MAPPINGS: dict[str, dict[str, Any]] = {
         "class": "l3extSubnet",
         "keys": [{"attribute": "ip", "regex": r"(?<=\[).*(?=\])"}],
     },
+    "extsubselector": {
+        "class": "fvExternalSubnetSelector",
+        "keys": [{"attribute": "ip", "regex": r"(?<=\[).*(?=\])"}],
+    },
+    "rsnodeL3OutAtt": {
+        "class": "l3extRsNodeL3OutAtt",
+        "keys": [{"attribute": "tDn", "regex": r"(?<=\[).*(?=\])"}],
+    },
     "rttag": {
         "class": "l3extRouteTagPol",
         "keys": [{"attribute": "name", "regex": ".*"}],
