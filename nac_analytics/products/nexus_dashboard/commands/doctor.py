@@ -6,7 +6,11 @@ from nac_analytics.core.exceptions import AuthError
 from nac_analytics.core.progress import note
 from nac_analytics.core.report import Result
 from nac_analytics.products.nexus_dashboard.client import fabric_name, is_aci_fabric
-from nac_analytics.products.nexus_dashboard.config import DEFAULT_DOMAIN, normalise_host
+from nac_analytics.products.nexus_dashboard.config import (
+    DEFAULT_DOMAIN,
+    DEFAULT_REQUEST_TIMEOUT_SECONDS,
+    normalise_host,
+)
 
 from . import _helpers
 from ._helpers import (
@@ -16,6 +20,7 @@ from ._helpers import (
     HostOpt,
     OutputOpt,
     PasswordOpt,
+    RequestTimeoutOpt,
     UserOpt,
     VerboseOpt,
     VerifyOpt,
@@ -35,6 +40,7 @@ def doctor(
     output: OutputOpt = "text",
     verify_ssl: VerifyOpt = True,
     ca_bundle: CaBundleOpt = None,
+    request_timeout: RequestTimeoutOpt = DEFAULT_REQUEST_TIMEOUT_SECONDS,
     verbose: VerboseOpt = False,
 ) -> None:
     """Check connectivity, credentials, and fabric visibility.
@@ -54,6 +60,7 @@ def doctor(
             ca_bundle=ca_bundle,
             timeout=30,
             poll_interval=15,
+            request_timeout=request_timeout,
         )
         details: dict[str, object] = {
             "base_url": config.base_url,

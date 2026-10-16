@@ -37,6 +37,7 @@ KNOWN_KEYS = frozenset(
         "ca_bundle",
         "job_timeout_minutes",
         "poll_interval",
+        "request_timeout_seconds",
         "delta_detail",
     }
 )
@@ -53,6 +54,7 @@ ENV_MAP: dict[str, str] = {
     "ca_bundle": "ND_CA_BUNDLE",
     "job_timeout_minutes": "ND_JOB_TIMEOUT_MINUTES",
     "poll_interval": "ND_POLL_INTERVAL",
+    "request_timeout_seconds": "ND_REQUEST_TIMEOUT_SECONDS",
     "delta_detail": "ND_DELTA_DETAIL",
 }
 
@@ -97,7 +99,7 @@ def _coerce_env_value(key: str, value: Any) -> str:
         return "true" if value else "false"
     if value is None:
         return ""
-    if key in {"job_timeout_minutes", "poll_interval"}:
+    if key in {"job_timeout_minutes", "poll_interval", "request_timeout_seconds"}:
         return str(int(value))
     return str(value)
 

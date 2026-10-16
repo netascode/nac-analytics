@@ -1,6 +1,6 @@
 [project]
 name = "nac-analytics"
-version = "0.2.0"
+version = "0.3.0"
 description = "Change analysis for Cisco Nexus Dashboard 4.2.1+."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -28,7 +28,7 @@ classifiers = [
     "Topic :: Software Development :: Testing",
 ]
 dependencies = [
-    "typer>=0.15.0",
+    "typer>=0.26.1",
     "httpx>=0.28.1",
     "pyyaml>=6.0.2",
     "python-dotenv>=1.0.1",

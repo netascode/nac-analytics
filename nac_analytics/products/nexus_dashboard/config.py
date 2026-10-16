@@ -10,6 +10,10 @@ from nac_analytics.core.exceptions import InputError
 # there is always a value here.
 DEFAULT_DOMAIN = "DefaultAuth"
 
+# Seconds to wait for a single HTTP response. Deliberately generous: some
+# endpoints stay slow under load, and raising it is cheaper than a failed run.
+DEFAULT_REQUEST_TIMEOUT_SECONDS = 60
+
 
 def normalise_host(host: str) -> str:
     """Strip any URL scheme and trailing slashes from a host.
@@ -42,7 +46,7 @@ class Config:
     fabric: str = ""
     verify_ssl: bool = True
     ca_bundle: str | None = None
-    request_timeout_seconds: float = 60.0
+    request_timeout_seconds: int = DEFAULT_REQUEST_TIMEOUT_SECONDS
     poll_interval_seconds: int = 15
     job_timeout_minutes: int = 30
     scheme: str = field(init=False, default="https")
@@ -66,6 +70,8 @@ class Config:
             raise InputError("--poll-interval must be at least 1 second.")
         if self.job_timeout_minutes < 1:
             raise InputError("--timeout must be at least 1 minute.")
+        if self.request_timeout_seconds <= 0:
+            raise InputError("--request-timeout must be greater than 0 seconds.")
 
     @property
     def base_url(self) -> str:

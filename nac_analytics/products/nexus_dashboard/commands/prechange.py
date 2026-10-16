@@ -10,7 +10,10 @@ import typer
 from nac_analytics.core.exceptions import ApiError, InputError
 from nac_analytics.core.progress import note
 from nac_analytics.core.report import GATE_DEFAULT_OUTPUT, parse_fail_on
-from nac_analytics.products.nexus_dashboard.config import DEFAULT_DOMAIN
+from nac_analytics.products.nexus_dashboard.config import (
+    DEFAULT_DOMAIN,
+    DEFAULT_REQUEST_TIMEOUT_SECONDS,
+)
 from nac_analytics.products.nexus_dashboard.delta import (
     PRECHANGE_DEFAULT_DETAIL,
     normalize_delta_detail,
@@ -32,6 +35,7 @@ from ._helpers import (
     PasswordOpt,
     PollOpt,
     ReportFileOpt,
+    RequestTimeoutOpt,
     SinceOpt,
     TimeoutOpt,
     UntilOpt,
@@ -106,6 +110,7 @@ def prechange(
     ca_bundle: CaBundleOpt = None,
     timeout: TimeoutOpt = 30,
     poll_interval: PollOpt = 15,
+    request_timeout: RequestTimeoutOpt = DEFAULT_REQUEST_TIMEOUT_SECONDS,
     verbose: VerboseOpt = False,
 ) -> None:
     """Analyse a candidate configuration against a fabric's current state.
@@ -142,6 +147,7 @@ def prechange(
             ca_bundle=ca_bundle,
             timeout=timeout,
             poll_interval=poll_interval,
+            request_timeout=request_timeout,
         )
         detail_level = normalize_delta_detail(detail)
         upload_content: bytes | None = None
