@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-16
+
 ### Added
 
 - Configurable HTTP request timeout for Nexus Dashboard: `--request-timeout`, `ND_REQUEST_TIMEOUT_SECONDS`, or `request_timeout_seconds` in YAML (default 60 seconds). Previously the 60-second timeout was hard-coded, so a cluster that answered slowly failed every command with `httpx.ReadTimeout`.
@@ -14,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 - `prechange` waits for the spawned delta job before reading `/deltaAnalysis/summary`. A completed parent job can still have a running child, and a mid-run summary may contain partial counts.
 - Terraform plan conversion takes naming properties that NAC leaves out of `content` from the RN: `tDn` on L3Out node attachments (`l3extRsNodeL3OutAtt`) and `ip` on ESG external subnet selectors (`fvExternalSubnetSelector`). Nexus Dashboard rejected plans with L3Out nodes with code 4011 (`does not match expected rn 'rsnodeL3OutAtt-[[...]]'`). RN mappings now also apply to RNs with `/` inside brackets (e.g. `rsdomAtt-[uni/phys-X]`), which were previously skipped.
+- Require Typer >= 0.26.1. Older releases fail at startup with `No module named 'typer._click'`.
 
 ## [0.2.0] - 2026-09-11
 
