@@ -112,6 +112,69 @@ def test_delete_actions_mark_objects_as_deleted() -> None:
     assert b"uni/tn-OLD" in payload
 
 
+@pytest.mark.parametrize(
+    ("parent_class", "parent_dn", "class_name", "rn", "naming"),
+    [
+        (
+            "l3extLNodeP",
+            "uni/tn-TEST/out-L3OUT/lnodep-NP",
+            "l3extRsNodeL3OutAtt",
+            "rsnodeL3OutAtt-[topology/pod-1/node-101]",
+            b'"tDn": "topology/pod-1/node-101"',
+        ),
+        (
+            "fvESg",
+            "uni/tn-TEST/ap-APP/esg-ESG",
+            "fvExternalSubnetSelector",
+            "extsubselector-[10.0.0.0/24]",
+            b'"ip": "10.0.0.0/24"',
+        ),
+    ],
+)
+def test_naming_attribute_missing_from_content_is_taken_from_the_rn(
+    parent_class: str, parent_dn: str, class_name: str, rn: str, naming: bytes
+) -> None:
+    """NAC leaves some naming properties out of `content`; the DN implies them.
+
+    Without them Nexus Dashboard derives the value from the RN with the
+    brackets kept and rejects the RN, e.g. as not matching
+    `rsnodeL3OutAtt-[[...]]`.
+    """
+    plan = {
+        "format_version": "1.2",
+        "resource_changes": [
+            {
+                "type": "aci_rest_managed",
+                "change": {
+                    "actions": ["create"],
+                    "before": None,
+                    "after": {
+                        "class_name": parent_class,
+                        "dn": parent_dn,
+                        "content": {},
+                    },
+                },
+            },
+            {
+                "type": "aci_rest_managed",
+                "change": {
+                    "actions": ["create"],
+                    "before": None,
+                    "after": {
+                        "class_name": class_name,
+                        "dn": f"{parent_dn}/{rn}",
+                        "content": {"descr": "x"},
+                    },
+                },
+            },
+        ],
+    }
+
+    payload = terraform_plan_to_payload(plan)
+
+    assert naming in payload
+
+
 def test_an_empty_terraform_plan_is_bad_input() -> None:
     plan = {"format_version": "1.2", "resource_changes": []}
 

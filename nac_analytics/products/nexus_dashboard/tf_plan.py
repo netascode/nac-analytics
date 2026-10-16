@@ -101,7 +101,8 @@ def _build_tf_plan_tree(tf_plan: dict[str, Any]) -> ApicObject:
 
 def _resolve_static_classnames(root: ApicObject) -> None:
     dn = str(root["dn"])
-    parts = dn.split("/")[-1].split("-", 1)
+    rn = dn[root._index_of_last_dn_delimiter(dn) + 1 :]
+    parts = rn.split("-", 1)
     prefix = parts[0]
     name = parts[1] if len(parts) > 1 else None
     if prefix in RN_PREFIX_CLASSNAME_MAPPINGS:

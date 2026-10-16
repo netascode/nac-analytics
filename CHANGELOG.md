@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### Fixed
 
 - `prechange` waits for the spawned delta job before reading `/deltaAnalysis/summary`. A completed parent job can still have a running child, and a mid-run summary may contain partial counts.
+- Terraform plan conversion takes naming properties that NAC leaves out of `content` from the RN: `tDn` on L3Out node attachments (`l3extRsNodeL3OutAtt`) and `ip` on ESG external subnet selectors (`fvExternalSubnetSelector`). Nexus Dashboard rejected plans with L3Out nodes with code 4011 (`does not match expected rn 'rsnodeL3OutAtt-[[...]]'`). RN mappings now also apply to RNs with `/` inside brackets (e.g. `rsdomAtt-[uni/phys-X]`), which were previously skipped.
 
 ## [0.2.0] - 2026-09-11
 
